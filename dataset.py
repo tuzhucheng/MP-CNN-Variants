@@ -32,7 +32,7 @@ class MPCNNDatasetFactory(object):
     Get the corresponding Dataset class for a particular dataset.
     """
     @staticmethod
-    def get_dataset(dataset_name, word_vectors_file, batch_size, cuda, sample):
+    def get_dataset(dataset_name, word_vectors_file, batch_size, cuda, sample, attention):
         extra_args = {'shuffle': True}
         dev_loader = None
         if sample:
@@ -41,12 +41,12 @@ class MPCNNDatasetFactory(object):
             extra_args['sampler'] = subset_random_sampler
             extra_args['shuffle'] = False
         if dataset_name == 'sick':
-            train_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TRAIN, cuda), batch_size=batch_size, **extra_args)
-            test_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TEST, cuda), batch_size=batch_size, **extra_args)
-            dev_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.DEV, cuda), batch_size=batch_size, **extra_args)
+            train_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TRAIN, cuda, attention), batch_size=batch_size, **extra_args)
+            test_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TEST, cuda, attention), batch_size=batch_size, **extra_args)
+            dev_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.DEV, cuda, attention), batch_size=batch_size, **extra_args)
         elif dataset_name == 'msrvid':
-            train_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TRAIN, cuda), batch_size=batch_size, **extra_args)
-            test_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TEST, cuda), batch_size=batch_size, **extra_args)
+            train_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TRAIN, cuda, attention), batch_size=batch_size, **extra_args)
+            test_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TEST, cuda, attention), batch_size=batch_size, **extra_args)
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
 
@@ -68,7 +68,7 @@ class MPCNNDataset(data.Dataset):
     dataset_root = None
     num_classes = None
 
-    def __init__(self, dataset_type, cuda):
+    def __init__(self, dataset_type, cuda, attention):
         if not isinstance(dataset_type, DatasetType):
             raise ValueError('dataset_type ({}) must be of type DatasetType enum'.format(dataset_type))
 
@@ -84,6 +84,7 @@ class MPCNNDataset(data.Dataset):
             raise RuntimeError('{} does not exist'.format(self.dataset_dir))
 
         self.cuda = cuda
+        self.attention = attention
         self.max_length = -10000
 
     def initialize(self, word_index, embedding):
@@ -107,6 +108,25 @@ class MPCNNDataset(data.Dataset):
             sent_pair = {}
             sent_pair['a'] = self._get_sentence_embeddings(sent_a_tokens[i], word_index, embedding)
             sent_pair['b'] = self._get_sentence_embeddings(sent_b_tokens[i], word_index, embedding)
+
+            if self.attention:
+                a_transposed = sent_pair['a'].transpose(1, 0)
+                a_norms = torch.norm(a_transposed, p=2, dim=1, keepdim=True)
+                b_norms = torch.norm(sent_pair['b'], p=2, dim=0, keepdim=True)
+                norm_products = torch.mm(a_norms, b_norms)
+                max_epsilon = torch.Tensor([1e-8]).expand(a_norms.size(0), b_norms.size(1))
+                max_epsilon = max_epsilon.cuda() if self.cuda else max_epsilon
+                norm_products = torch.max(norm_products, max_epsilon)
+                attention = torch.mm(a_transposed, sent_pair['b']) / norm_products
+                attention_col_sum = F.softmax(attention.sum(0)).view(-1).data
+                attention_row_sum = F.softmax(attention.sum(1)).view(-1).data
+                col_sum_expanded = attention_col_sum.expand(300, attention_col_sum.size()[0])
+                row_sum_expanded = attention_row_sum.expand(300, attention_row_sum.size()[0])
+                weighted_left = col_sum_expanded * sent_pair['a']
+                weighted_right = row_sum_expanded * sent_pair['b']
+                sent_pair['a'] = torch.cat([sent_pair['a'], weighted_left])
+                sent_pair['b'] = torch.cat([sent_pair['b'], weighted_right])
+
             self.sentences.append(sent_pair)
         self.labels = self._load(self.dataset_dir, 'sim.txt', float)
 
@@ -145,8 +165,8 @@ class SICKDataset(MPCNNDataset):
     dataset_root = os.path.join(os.pardir, 'data', 'sick')
     num_classes = 5
 
-    def __init__(self, dataset_type, cuda):
-        super(SICKDataset, self).__init__(dataset_type, cuda)
+    def __init__(self, dataset_type, cuda, attention):
+        super(SICKDataset, self).__init__(dataset_type, cuda, attention)
 
     def initialize(self, word_index, embedding):
         super(SICKDataset, self).initialize(word_index, embedding)
@@ -167,8 +187,8 @@ class MSRVIDDataset(MPCNNDataset):
     dataset_root = os.path.join(os.pardir, 'data', 'msrvid')
     num_classes = 6
 
-    def __init__(self, dataset_type, cuda):
-        super(MSRVIDDataset, self).__init__(dataset_type, cuda)
+    def __init__(self, dataset_type, cuda, attention):
+        super(MSRVIDDataset, self).__init__(dataset_type, cuda, attention)
 
     def initialize(self, word_index, embedding):
         super(MSRVIDDataset, self).initialize(word_index, embedding)

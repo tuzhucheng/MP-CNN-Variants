@@ -11,6 +11,7 @@ class MPCNN(nn.Module):
         super(MPCNN, self).__init__()
 
         self.n_word_dim = n_word_dim
+        self.n_holistic_filters = n_holistic_filters
         self.n_per_dim_filters = n_per_dim_filters
         self.filter_widths = filter_widths
         holistic_conv_layers = []
@@ -52,9 +53,9 @@ class MPCNN(nn.Module):
         for ws in self.filter_widths:
             holistic_conv_out = self.holistic_conv_layers[ws - 1](sent) if not np.isinf(ws) else sent
             block_a[ws] = {
-                'max': F.max_pool1d(holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_word_dim),
-                'min': F.max_pool1d(-1 * holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_word_dim),
-                'mean': F.avg_pool1d(holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_word_dim)
+                'max': F.max_pool1d(holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_holistic_filters),
+                'min': F.max_pool1d(-1 * holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_holistic_filters),
+                'mean': F.avg_pool1d(holistic_conv_out, holistic_conv_out.size()[2]).view(-1, self.n_holistic_filters)
             }
 
             # only compute per-dimension convolution for non-infinity widths
@@ -74,6 +75,8 @@ class MPCNN(nn.Module):
             for ws in self.filter_widths:
                 x1 = sent1_block_a[ws][pool]
                 x2 = sent2_block_a[ws][pool]
+                print('ws', ws, 'pool', pool)
+                print('x1', x1.size())
                 batch_size = x1.size()[0]
                 comparison_feats.append(F.cosine_similarity(x1, x2).view(batch_size, 1))
                 comparison_feats.append(F.pairwise_distance(x1, x2))

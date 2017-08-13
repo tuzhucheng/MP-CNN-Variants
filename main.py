@@ -35,6 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--word-vectors-file', help='word vectors file', default=os.path.join(os.pardir, 'data', 'GloVe', 'glove.840B.300d.txt'))
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
+    parser.add_argument('--attention', action='store_true', default=False, help='enable attention')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N', help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')
@@ -55,10 +56,11 @@ if __name__ == '__main__':
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
-    train_loader, test_loader, dev_loader = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_file, args.batch_size, args.cuda, args.sample)
+    train_loader, test_loader, dev_loader = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_file, args.batch_size, args.cuda, args.sample, args.attention)
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-    model = MPCNN(300, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes)
+    input_channels = 300 if not args.attention else 600
+    model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes)
     if args.cuda:
         model.cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.regularization, eps=args.epsilon)

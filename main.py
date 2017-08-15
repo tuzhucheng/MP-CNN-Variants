@@ -36,6 +36,7 @@ if __name__ == '__main__':
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--no-cuda', action='store_true', default=False, help='disables CUDA training')
     parser.add_argument('--attention', action='store_true', default=False, help='enable attention')
+    parser.add_argument('--sparse-features', action='store_true', default=False, help='use sparse features')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N', help='input batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=10, metavar='N', help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR', help='learning rate (default: 0.001)')

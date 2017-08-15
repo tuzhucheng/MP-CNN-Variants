@@ -76,9 +76,10 @@ class SICKTrainer(Trainer):
         total_loss = 0
         for batch_idx, (sentences, labels) in enumerate(self.train_loader):
             sent_a, sent_b = Variable(sentences['a']), Variable(sentences['b'])
+            ext_feats = Variable(sentences['ext_feats'])
             labels = Variable(labels)
             self.optimizer.zero_grad()
-            output = self.model(sent_a, sent_b)
+            output = self.model(sent_a, sent_b, ext_feats)
             loss = F.kl_div(output, labels)
             total_loss += loss.data[0]
             loss.backward()

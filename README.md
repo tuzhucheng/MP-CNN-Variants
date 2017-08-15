@@ -1,6 +1,8 @@
-# MP-CNN PyTorch Implementation
+# MP-CNN Variations
 
-This is a PyTorch implementation of the following paper
+This is a PyTorch implementation of MP-CNN as a base model with modifications and additions such as attention and sparse features.
+
+Here is the MP-CNN paper:
 
 * Hua He, Kevin Gimpel, and Jimmy Lin. [Multi-Perspective Sentence Similarity Modeling with Convolutional Neural Networks](http://aclweb.org/anthology/D/D15/D15-1181.pdf). *Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP 2015)*, pages 1576-1586.
 

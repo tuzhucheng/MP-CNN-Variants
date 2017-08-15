@@ -132,6 +132,17 @@ class MPCNNDataset(data.Dataset):
                 attention = torch.mm(a_transposed, sent_pair['b']) / norm_products
                 attention_col_sum = F.softmax(attention.sum(0)).view(-1).data
                 attention_row_sum = F.softmax(attention.sum(1)).view(-1).data
+
+                sent_a_df = torch.ones(attention_col_sum.size()[0])
+                sent_b_df = torch.ones(attention_row_sum.size()[0])
+                sent_a_df[:len(sent_a_tokens[i])] = torch.Tensor([word_to_doc_cnt[w] for w in sent_a_tokens[i]])
+                sent_b_df[:len(sent_b_tokens[i])] = torch.Tensor([word_to_doc_cnt[w] for w in sent_b_tokens[i]])
+                if self.cuda:
+                    sent_a_df, sent_b_df = sent_a_df.cuda(), sent_b_df.cuda()
+
+                attention_col_sum /= sent_a_df
+                attention_row_sum /= sent_b_df
+
                 col_sum_expanded = attention_col_sum.expand(300, attention_col_sum.size()[0])
                 row_sum_expanded = attention_row_sum.expand(300, attention_row_sum.size()[0])
                 weighted_left = col_sum_expanded * sent_pair['a']

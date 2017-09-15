@@ -39,3 +39,7 @@ To see all options available, use
 ```
 python main.py --help
 ```
+
+## Dependencies
+
+The model is written in PyTorch. We make use of https://github.com/lanpa/tensorboard-pytorch to connect to [TensorBoard](https://github.com/tensorflow/tensorboard) to visualize the training process.

@@ -1,6 +1,7 @@
 import math
 import time
 
+from tensorboardX import SummaryWriter
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
@@ -51,6 +52,7 @@ class Trainer(object):
         self.train_evaluator = train_evaluator
         self.test_evaluator = test_evaluator
         self.dev_evaluator = dev_evaluator
+        self.writer = SummaryWriter()
 
     def evaluate(self, evaluator, dataset_name):
         scores, metric_names = evaluator.get_scores()
@@ -90,6 +92,7 @@ class SICKTrainer(Trainer):
                     len(self.train_loader.dataset) if not self.sample else self.sample,
                     100. * batch_idx / (len(self.train_loader) if not self.sample else math.ceil(self.sample / self.batch_size)), loss.data[0])
                 )
+        self.writer.add_scalar('sick/train/kl_div_loss', total_loss, epoch)
         return total_loss
 
     def train(self, epochs):
@@ -102,6 +105,9 @@ class SICKTrainer(Trainer):
             self.train_epoch(epoch)
 
             dev_scores = self.evaluate(self.dev_evaluator, 'dev')
+            self.writer.add_scalar('sick/lr', self.optimizer.param_groups[0]['lr'], epoch)
+            self.writer.add_scalar('sick/dev/pearson_r', dev_scores[0], epoch)
+            self.writer.add_scalar('sick/dev/kl_div_loss', dev_scores[2], epoch)
             end = time.time()
             duration = end - start
             logger.info('Epoch {} finished in {:.2f} minutes'.format(epoch, duration / 60))
@@ -153,6 +159,7 @@ class MSRVIDTrainer(Trainer):
                 )
 
         self.evaluate(self.train_evaluator, 'train')
+        self.writer.add_scalar('msrvid/train/kl_div_loss', loss.data[0], epoch)
         return left_out_val_a, left_out_val_b, left_out_ext_feats, left_out_val_labels
 
     def train(self, epochs):
@@ -176,9 +183,11 @@ class MSRVIDTrainer(Trainer):
             predictions = predictions.cpu().numpy()
             true_labels = true_labels.cpu().numpy()
             pearson_r = pearsonr(predictions, true_labels)[0]
+            self.writer.add_scalar('msrvid/dev/pearson_r', pearson_r, epoch)
             for param_group in self.optimizer.param_groups:
                 logger.info('Validation size: %s Pearson\'s r: %s', output.size()[0], pearson_r)
                 logger.info('Learning rate: %s', param_group['lr'])
+                self.writer.add_scalar('msrvid/lr', param_group['lr'], epoch)
                 break
             scheduler.step(pearson_r)
 

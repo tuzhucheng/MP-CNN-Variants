@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 class MPCNN(nn.Module):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes):
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout):
         super(MPCNN, self).__init__()
 
         self.n_word_dim = n_word_dim
@@ -52,7 +52,7 @@ class MPCNN(nn.Module):
             nn.Linear(n_feat, hidden_layer_units),
             nn.BatchNorm1d(hidden_layer_units),
             nn.Tanh(),
-            nn.Dropout(0.5),
+            nn.Dropout(dropout),
             nn.Linear(hidden_layer_units, num_classes),
             nn.LogSoftmax()
         )

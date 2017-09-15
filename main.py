@@ -58,11 +58,8 @@ if __name__ == '__main__':
         torch.cuda.manual_seed(args.seed)
 
     train_loader, test_loader, dev_loader = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_file, args.batch_size, args.cuda, args.sample, args.attention)
-    inf_width = min(train_loader.dataset.max_length, test_loader.dataset.max_length)
-    if dev_loader is not None:
-        inf_width = min(inf_width, dev_loader.dataset.max_length)
 
-    filter_widths = list(range(1, args.max_window_size + 1)) + [inf_width]
+    filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
     input_channels = 300 if not args.attention else 600
     model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes)
     if args.cuda:

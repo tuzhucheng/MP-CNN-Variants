@@ -50,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('--holistic-filters', type=int, default=300, metavar='N', help='number of holistic filters (default: 300)')
     parser.add_argument('--per-dim-filters', type=int, default=20, metavar='N', help='number of per-dimension filters (default: 20)')
     parser.add_argument('--hidden-units', type=int, default=150, metavar='N', help='number of hidden units in each of the two hidden layers (default: 150)')
+    parser.add_argument('--padding', action='store_true', default=False, help='use padding for convolution (default: False)')
     parser.add_argument('--dropout', type=float, default=0.5, metavar='N', help='dropout probability (default: 0.5)')
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
     args = parser.parse_args()
@@ -64,7 +65,7 @@ if __name__ == '__main__':
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
     input_channels = 300 if not args.attention else 600
-    model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes, args.dropout)
+    model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes, args.padding, args.dropout)
     if args.cuda:
         model.cuda()
     optimizer = None

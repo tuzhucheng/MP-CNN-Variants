@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 class MPCNN(nn.Module):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout):
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, padding, dropout):
         super(MPCNN, self).__init__()
 
         self.n_word_dim = n_word_dim
@@ -21,13 +21,14 @@ class MPCNN(nn.Module):
             if np.isinf(ws):
                 continue
 
+            pad = 0 if not padding else ws - 1
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv1d(n_word_dim, n_holistic_filters, ws),
+                nn.Conv1d(n_word_dim, n_holistic_filters, ws, padding=pad),
                 nn.Tanh()
             ))
 
             per_dim_conv_layers.append(nn.Sequential(
-                nn.Conv1d(n_word_dim, n_word_dim * n_per_dim_filters, ws, groups=n_word_dim),
+                nn.Conv1d(n_word_dim, n_word_dim * n_per_dim_filters, ws, groups=n_word_dim, padding=pad),
                 nn.Tanh()
             ))
 

@@ -26,11 +26,11 @@ class MPCNNTrainerFactory(object):
     Get the corresponding Trainer class for a particular dataset.
     """
     @staticmethod
-    def get_trainer(dataset_name, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator=None):
+    def get_trainer(dataset_name, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None):
         if dataset_name == 'sick':
-            return SICKTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator)
+            return SICKTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator)
         elif dataset_name == 'msrvid':
-            return MSRVIDTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator)
+            return MSRVIDTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator)
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
 
@@ -41,7 +41,7 @@ class Trainer(object):
     Abstraction for training a model on a Dataset.
     """
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator=None):
+    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None):
         self.model = model
         self.optimizer = optimizer
         self.train_loader = train_loader
@@ -49,6 +49,8 @@ class Trainer(object):
         self.sample = sample
         self.log_interval = log_interval
         self.model_outfile = model_outfile
+        self.lr_reduce_factor = lr_reduce_factor
+        self.patience = patience
         self.train_evaluator = train_evaluator
         self.test_evaluator = test_evaluator
         self.dev_evaluator = dev_evaluator
@@ -70,8 +72,8 @@ class Trainer(object):
 
 class SICKTrainer(Trainer):
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(SICKTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator)
+    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(SICKTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -96,7 +98,7 @@ class SICKTrainer(Trainer):
         return total_loss
 
     def train(self, epochs):
-        scheduler = ReduceLROnPlateau(self.optimizer, mode='max', factor=0.3, patience=2)
+        scheduler = ReduceLROnPlateau(self.optimizer, mode='max', factor=self.lr_reduce_factor, patience=self.patience)
         epoch_times = []
         best_dev_score = -1
         for epoch in range(1, epochs + 1):
@@ -123,8 +125,8 @@ class SICKTrainer(Trainer):
 
 class MSRVIDTrainer(Trainer):
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(MSRVIDTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, train_evaluator, test_evaluator, dev_evaluator)
+    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(MSRVIDTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -163,7 +165,7 @@ class MSRVIDTrainer(Trainer):
         return left_out_val_a, left_out_val_b, left_out_ext_feats, left_out_val_labels
 
     def train(self, epochs):
-        scheduler = ReduceLROnPlateau(self.optimizer, mode='max', factor=0.3, patience=2)
+        scheduler = ReduceLROnPlateau(self.optimizer, mode='max', factor=self.lr_reduce_factor, patience=self.patience)
         epoch_times = []
         best_dev_score = -1
         for epoch in range(1, epochs + 1):

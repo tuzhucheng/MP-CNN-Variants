@@ -51,7 +51,6 @@ class MPCNN(nn.Module):
 
         self.final_layers = nn.Sequential(
             nn.Linear(n_feat, hidden_layer_units),
-            nn.BatchNorm1d(hidden_layer_units),
             nn.Tanh(),
             nn.Dropout(dropout),
             nn.Linear(hidden_layer_units, num_classes),

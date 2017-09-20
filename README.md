@@ -22,11 +22,15 @@ Directory layout should be like this:
 │   └── GloVe/
 ```
 
-To run MP-CNN on the SICK dataset, use the following command:
+To run MP-CNN on the SICK dataset mimicking the original paper as closely as possible, use the following command:
 
 ```
-python main.py mpcnn.sick.model.castor --dataset sick --batch-size 32 --epochs 15
+python main.py mpcnn.sick.model.castor --dataset sick --epochs 19 --epsilon 1e-7 --dropout 0
 ```
+
+Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
+
+You should be able to obtain Pearson's p to be 0.8744 and Spearman's r to be 0.8183, slightly better than the results obtained in the paper.
 
 To run MP-CNN on the MSRVID dataset, use the following command:
 ```

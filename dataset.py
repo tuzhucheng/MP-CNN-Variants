@@ -118,6 +118,7 @@ class MPCNNDataset(data.Dataset):
 
 
         self.sentences = []
+        stoplist = set(stopwords.words('english'))
         for i in range(len(sent_a)):
             sent_pair = {}
             sent_pair['a'] = self._get_sentence_embeddings(sent_a_tokens[i], word_index, embedding)
@@ -158,7 +159,6 @@ class MPCNNDataset(data.Dataset):
             idf = 1 / np.prod([word_to_doc_cnt[w] for w in intersect])
             idf_weighted_overlap = overlap * idf
 
-            stoplist = set(stopwords.words('english'))
             tokens_a_set_no_stop = set(w for w in sent_a_tokens[i] if w not in stoplist)
             tokens_b_set_no_stop = set(w for w in sent_b_tokens[i] if w not in stoplist)
             intersect_no_stop = tokens_a_set_no_stop & tokens_b_set_no_stop

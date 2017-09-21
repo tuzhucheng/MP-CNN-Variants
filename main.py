@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
     input_channels = 300 if not args.attention else 600
-    model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes, args.padding, args.dropout)
+    model = MPCNN(input_channels, args.holistic_filters, args.per_dim_filters, filter_widths, args.hidden_units, train_loader.dataset.num_classes, args.padding, args.dropout, args.sparse_features)
     if args.cuda:
         model.cuda()
     optimizer = None

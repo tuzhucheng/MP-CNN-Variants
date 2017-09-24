@@ -13,7 +13,7 @@ def get_vocab(data_dir):
     Get vocabulary as set of words.
     """
     vocab = set()
-    with open(os.path.join(data_dir, 'vocab-cased.txt'), 'r') as f:
+    with open(os.path.join(data_dir, 'vocab-cased.txt'), 'r', encoding='utf-8') as f:
         for line in f:
             word = line.rstrip()
             vocab.add(word)
@@ -25,7 +25,7 @@ def get_embedding_index(vocab, glove_file):
     Get dictionary mapping word to its word vector.
     """
     embedding_index = {}
-    with open(glove_file, 'r') as f:
+    with open(glove_file, 'r', encoding='utf-8') as f:
         for line in f:
             parts = line.split()
             word = parts[0]

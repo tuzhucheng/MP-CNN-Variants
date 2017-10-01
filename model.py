@@ -46,7 +46,7 @@ class MPCNN(nn.Module):
             # comparison units from holistic conv for min, max, mean pooling for infinite widths
             3 * 3 +
             # comparison units from per-dim conv
-            2 * (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
+            3 * (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
         )
         n_feat = n_feat_h + n_feat_v + EXT_FEATS
 
@@ -80,7 +80,8 @@ class MPCNN(nn.Module):
             per_dim_conv_out = self.per_dim_conv_layers[ws - 1](sent)
             block_b[ws] = {
                 'max': F.max_pool1d(per_dim_conv_out, per_dim_conv_out.size(2)).view(-1, self.n_word_dim, self.n_per_dim_filters),
-                'min': F.max_pool1d(-1 * per_dim_conv_out, per_dim_conv_out.size(2)).view(-1, self.n_word_dim, self.n_per_dim_filters)
+                'min': F.max_pool1d(-1 * per_dim_conv_out, per_dim_conv_out.size(2)).view(-1, self.n_word_dim, self.n_per_dim_filters),
+                'mean': F.avg_pool1d(per_dim_conv_out, per_dim_conv_out.size(2)).view(-1, self.n_word_dim, self.n_per_dim_filters)
             }
         return block_a, block_b
 
@@ -109,7 +110,7 @@ class MPCNN(nn.Module):
                         comparison_feats.append(F.pairwise_distance(x1, x2))
                         comparison_feats.append(torch.abs(x1 - x2))
 
-        for pool in ('max', 'min'):
+        for pool in ('max', 'min', 'mean'):
             for ws in ws_no_inf:
                 oG_1B = sent1_block_b[ws][pool]
                 oG_2B = sent2_block_b[ws][pool]

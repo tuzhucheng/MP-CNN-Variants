@@ -55,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--padding', action='store_true', default=False, help='use padding for convolution (default: False)')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout probability (default: 0.5)')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
+    parser.add_argument('--run-label', type=str, help='label to describe run')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
@@ -81,7 +82,7 @@ if __name__ == '__main__':
     test_evaluator = MPCNNEvaluatorFactory.get_evaluator(args.dataset, model, test_loader, args.batch_size, args.cuda)
     dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(args.dataset, model, dev_loader, args.batch_size, args.cuda)
 
-    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, optimizer, train_loader, args.batch_size, args.sample, args.log_interval, args.model_outfile, args.lr_reduce_factor, args.patience, train_evaluator, test_evaluator, dev_evaluator)
+    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, optimizer, train_loader, args.batch_size, args.sample, args.log_interval, args.model_outfile, args.lr_reduce_factor, args.patience, train_evaluator, test_evaluator, dev_evaluator, args.run_label)
 
     if not args.skip_training:
         total_params = 0

@@ -37,9 +37,9 @@ class MPCNN(nn.Module):
         self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
 
         # compute number of inputs to first hidden layer
-        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2 + n_word_dim, 2
+        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM= 2 + n_holistic_filters, 2 + n_word_dim
         EXT_FEATS = 4 if ext_feats else 0
-        n_feat_h = 3 * len(self.filter_widths) * COMP_2_COMPONENTS
+        n_feat_h = 3 * (len(self.filter_widths) - 1) * COMP_1_COMPONENTS_HOLISTIC + 3 * 3
         n_feat_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
             3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
@@ -93,6 +93,7 @@ class MPCNN(nn.Module):
                 batch_size = x1.size()[0]
                 comparison_feats.append(F.cosine_similarity(x1, x2).view(batch_size, 1))
                 comparison_feats.append(F.pairwise_distance(x1, x2))
+                comparison_feats.append(torch.abs(x1 - x2))
         return torch.cat(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):

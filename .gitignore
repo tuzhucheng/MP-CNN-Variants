@@ -1,4 +1,5 @@
 __pycache__/
 saved_models/
+.idea/
 *.swp
 *.pyc

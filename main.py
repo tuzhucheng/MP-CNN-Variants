@@ -55,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--padding', action='store_true', default=False, help='use padding for convolution (default: False)')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout probability (default: 0.5)')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
+    parser.add_argument('--tensorboard', action='store_true', default=False, help='use TensorBoard to visualize training (default: false)')
     parser.add_argument('--run-label', type=str, help='label to describe run')
     args = parser.parse_args()
     args.cuda = not args.no_cuda and torch.cuda.is_available()

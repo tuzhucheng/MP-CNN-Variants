@@ -5,9 +5,8 @@ from tensorboardX import SummaryWriter
 import torch
 import torch.nn.functional as F
 from torch.autograd import Variable
-import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from scipy.stats import pearsonr, spearmanr
+from scipy.stats import pearsonr
 
 # logging setup
 import logging
@@ -26,11 +25,11 @@ class MPCNNTrainerFactory(object):
     Get the corresponding Trainer class for a particular dataset.
     """
     @staticmethod
-    def get_trainer(dataset_name, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None, run_label=None):
+    def get_trainer(dataset_name, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
         if dataset_name == 'sick':
-            return SICKTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator, run_label)
+            return SICKTrainer(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
         elif dataset_name == 'msrvid':
-            return MSRVIDTrainer(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator, run_label)
+            return MSRVIDTrainer(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
 
@@ -41,20 +40,21 @@ class Trainer(object):
     Abstraction for training a model on a Dataset.
     """
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None, run_label=None):
+    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
         self.model = model
-        self.optimizer = optimizer
+        self.optimizer = trainer_config['optimizer']
         self.train_loader = train_loader
-        self.batch_size = batch_size
-        self.sample = sample
-        self.log_interval = log_interval
-        self.model_outfile = model_outfile
-        self.lr_reduce_factor = lr_reduce_factor
-        self.patience = patience
+        self.batch_size = trainer_config['batch_size']
+        self.sample = trainer_config['sample']
+        self.log_interval = trainer_config['log_interval']
+        self.model_outfile = trainer_config['model_outfile']
+        self.lr_reduce_factor = trainer_config['lr_reduce_factor']
+        self.patience = trainer_config['patience']
+
         self.train_evaluator = train_evaluator
         self.test_evaluator = test_evaluator
         self.dev_evaluator = dev_evaluator
-        self.writer = SummaryWriter(log_dir=None, comment=run_label)
+        self.writer = SummaryWriter(log_dir=None, comment=trainer_config['run_label'])
 
     def evaluate(self, evaluator, dataset_name):
         scores, metric_names = evaluator.get_scores()
@@ -72,8 +72,8 @@ class Trainer(object):
 
 class SICKTrainer(Trainer):
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None, run_label=None):
-        super(SICKTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator, run_label)
+    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(SICKTrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -133,8 +133,8 @@ class SICKTrainer(Trainer):
 
 class MSRVIDTrainer(Trainer):
 
-    def __init__(self, model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator=None, run_label=None):
-        super(MSRVIDTrainer, self).__init__(model, optimizer, train_loader, batch_size, sample, log_interval, model_outfile, lr_reduce_factor, patience, train_evaluator, test_evaluator, dev_evaluator, run_label)
+    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(MSRVIDTrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -145,7 +145,7 @@ class MSRVIDTrainer(Trainer):
         left_out_val_a, left_out_val_b = [], []
         left_out_ext_feats = []
         left_out_val_labels = []
-
+        total_loss = 0
         for batch_idx, (sentences, labels) in enumerate(self.train_loader):
             sent_a, sent_b = Variable(sentences['a']), Variable(sentences['b'])
             ext_feats = Variable(sentences['ext_feats'])
@@ -159,6 +159,7 @@ class MSRVIDTrainer(Trainer):
             self.optimizer.zero_grad()
             output = self.model(sent_a, sent_b, ext_feats)
             loss = F.kl_div(output, labels)
+            total_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
             if batch_idx % self.log_interval == 0:
@@ -169,7 +170,7 @@ class MSRVIDTrainer(Trainer):
                 )
 
         self.evaluate(self.train_evaluator, 'train')
-        self.writer.add_scalar('msrvid/train/kl_div_loss', loss.data[0], epoch)
+        self.writer.add_scalar('msrvid/train/kl_div_loss', total_loss, epoch)
         return left_out_val_a, left_out_val_b, left_out_ext_feats, left_out_val_labels
 
     def train(self, epochs):

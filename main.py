@@ -82,7 +82,18 @@ if __name__ == '__main__':
     test_evaluator = MPCNNEvaluatorFactory.get_evaluator(args.dataset, model, test_loader, args.batch_size, args.cuda)
     dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(args.dataset, model, dev_loader, args.batch_size, args.cuda)
 
-    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, optimizer, train_loader, args.batch_size, args.sample, args.log_interval, args.model_outfile, args.lr_reduce_factor, args.patience, train_evaluator, test_evaluator, dev_evaluator, args.run_label)
+    trainer_config = {
+        'optimizer': optimizer,
+        'batch_size': args.batch_size,
+        'sample': args.sample,
+        'log_interval': args.log_interval,
+        'model_outfile': args.model_outfile,
+        'lr_reduce_factor': args.lr_reduce_factor,
+        'patience': args.patience,
+        'tensorboard': args.tensorboard,
+        'run_label': args.run_label
+    }
+    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     if not args.skip_training:
         total_params = 0

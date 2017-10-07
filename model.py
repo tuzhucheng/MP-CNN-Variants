@@ -37,16 +37,16 @@ class MPCNN(nn.Module):
         self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
 
         # compute number of inputs to first hidden layer
-        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2 + n_word_dim, 2
+        COMP_2_COMPONENTS = 2
         EXT_FEATS = 4 if ext_feats else 0
         n_feat_h = 3 * len(self.filter_widths) * COMP_2_COMPONENTS
         n_feat_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
-            3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
+            3 * ((len(self.filter_widths) - 1) ** 2) * COMP_2_COMPONENTS +
             # comparison units from holistic conv for min, max, mean pooling for infinite widths
-            3 * 3 +
+            3 * 2 +
             # comparison units from per-dim conv
-            3 * (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
+            3 * (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_2_COMPONENTS
         )
         n_feat = n_feat_h + n_feat_v + EXT_FEATS
 
@@ -108,7 +108,6 @@ class MPCNN(nn.Module):
                     if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
                         comparison_feats.append(F.cosine_similarity(x1, x2).view(batch_size, 1))
                         comparison_feats.append(F.pairwise_distance(x1, x2))
-                        comparison_feats.append(torch.abs(x1 - x2))
 
         for pool in ('max', 'min', 'mean'):
             for ws in ws_no_inf:
@@ -120,7 +119,6 @@ class MPCNN(nn.Module):
                     batch_size = x1.size()[0]
                     comparison_feats.append(F.cosine_similarity(x1, x2).view(batch_size, 1))
                     comparison_feats.append(F.pairwise_distance(x1, x2))
-                    comparison_feats.append(torch.abs(x1 - x2))
 
         return torch.cat(comparison_feats, dim=1)
 

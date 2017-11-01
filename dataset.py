@@ -5,6 +5,7 @@ import torch.nn as nn
 
 from datasets.sick import SICK
 from datasets.msrvid import MSRVID
+from datasets.trecqa import TRECQA
 
 # logging setup
 import logging
@@ -54,6 +55,13 @@ class MPCNNDatasetFactory(object):
             embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
             embedding.weight = nn.Parameter(MSRVID.TEXT_FIELD.vocab.vectors)
             return MSRVID, embedding, train_loader, test_loader, dev_loader
+        elif dataset_name == 'trecqa':
+            dataset_root = os.path.join(os.pardir, 'data', 'TrecQA/')
+            train_loader, dev_loader, test_loader = TRECQA.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWorcVecCache.unk)
+            embedding_dim = TRECQA.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(TRECQA.TEXT_FIELD.vocab.vectors)
+            return TRECQA, embedding, train_loader, test_loader, dev_loader
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
 

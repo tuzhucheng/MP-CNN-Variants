@@ -26,7 +26,7 @@ logger.addHandler(ch)
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch implementation of Multi-Perspective CNN')
     parser.add_argument('model_outfile', help='file to save final model')
-    parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid]', default='sick')
+    parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid, trecqa]', default='sick')
     parser.add_argument('--word-vectors-dir', help='word vectors directory', default=os.path.join(os.pardir, 'data', 'GloVe'))
     parser.add_argument('--word-vectors-file', help='word vectors filename', default='glove.840B.300d.txt')
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')

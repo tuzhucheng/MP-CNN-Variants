@@ -40,14 +40,14 @@ class MPCNNDatasetFactory(object):
     @staticmethod
     def get_dataset(dataset_name, word_vectors_dir, word_vectors_file, batch_size, device):
         if dataset_name == 'sick':
-            dataset_root = os.path.join(os.pardir, os.pardir, 'data', 'sick/')
+            dataset_root = os.path.join(os.pardir, 'data', 'sick/')
             train_loader, dev_loader, test_loader = SICK.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWorcVecCache.unk)
             embedding_dim = SICK.TEXT_FIELD.vocab.vectors.size()
             embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
             embedding.weight = nn.Parameter(SICK.TEXT_FIELD.vocab.vectors)
             return SICK, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrvid':
-            dataset_root = os.path.join(os.pardir, os.pardir, 'data', 'msrvid/')
+            dataset_root = os.path.join(os.pardir, 'data', 'msrvid/')
             dev_loader = None
             train_loader, test_loader = MSRVID.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWorcVecCache.unk)
             embedding_dim = MSRVID.TEXT_FIELD.vocab.vectors.size()

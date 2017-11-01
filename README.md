@@ -41,6 +41,8 @@ python main.py mpcnn.msrvid.model.castor --dataset msrvid --batch-size 16 --epsi
 
 You should be able to obtain Pearson's p to be 0.8911, for reference the performance in the paper is 0.9090.
 
+To run MP-CNN on TrecQA, you first need to download and compile the `trec_eval` tool using the `get_trec_eval.sh` script.
+
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 
 To see all options available, use

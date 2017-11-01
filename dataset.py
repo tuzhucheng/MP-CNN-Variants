@@ -7,17 +7,6 @@ from datasets.sick import SICK
 from datasets.msrvid import MSRVID
 from datasets.trecqa import TRECQA
 
-# logging setup
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
-
 
 class UnknownWorcVecCache(object):
     """

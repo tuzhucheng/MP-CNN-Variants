@@ -1,4 +1,5 @@
 import argparse
+import logging
 import os
 import random
 
@@ -10,17 +11,6 @@ from dataset import MPCNNDatasetFactory
 from evaluation import MPCNNEvaluatorFactory
 from model import MPCNN
 from train import MPCNNTrainerFactory
-
-# logging setup
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
 
 
 if __name__ == '__main__':
@@ -58,6 +48,16 @@ if __name__ == '__main__':
     if args.device != -1:
         torch.cuda.manual_seed(args.seed)
 
+    # logging setup
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
         = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, args.device)
 
@@ -89,7 +89,8 @@ if __name__ == '__main__':
         'lr_reduce_factor': args.lr_reduce_factor,
         'patience': args.patience,
         'tensorboard': args.tensorboard,
-        'run_label': args.run_label
+        'run_label': args.run_label,
+        'logger': logger
     }
     trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 

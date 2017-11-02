@@ -11,23 +11,13 @@ from torchtext.vocab import Vectors
 from datasets.idf_utils import get_pairwise_word_to_doc_freq, get_pairwise_overlap_features
 
 
-def get_class_probs(sim, *args):
-    """
-    Convert a single label into class probabilities.
-    """
-    if float(sim) == 1.0:
-        return [0, 1.0]
-    else:
-        return [1.0, 0]
-
-
 class TRECQA(Dataset):
     NAME = 'trecqa'
     NUM_CLASSES = 2
     ID_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it to compute external features
     EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
-    LABEL_FIELD = Field(sequential=False, tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, postprocessing=Pipeline(get_class_probs))
+    LABEL_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
 
     @staticmethod
     def sort_key(ex):

@@ -45,11 +45,13 @@ class TRECQATrainer(Trainer):
             self.train_epoch(epoch)
 
             dev_scores = self.evaluate(self.dev_evaluator, 'dev')
-            new_loss = dev_scores[0]
+            new_loss, mean_average_precision, mean_reciprocal_rank = dev_scores
 
             if self.use_tensorboard:
                 self.writer.add_scalar('trecqa/lr', self.optimizer.param_groups[0]['lr'], epoch)
                 self.writer.add_scalar('trecqa/dev/cross_entropy_loss', new_loss, epoch)
+                self.writer.add_scalar('trecqa/dev/map', mean_average_precision, epoch)
+                self.writer.add_scalar('trecqa/dev/mrr', mean_reciprocal_rank, epoch)
 
             end = time.time()
             duration = end - start

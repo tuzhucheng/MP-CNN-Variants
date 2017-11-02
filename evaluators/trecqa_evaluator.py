@@ -24,8 +24,9 @@ class TRECQAEvaluator(Evaluator):
 
             del output
 
-        # predictions = torch.cat(predictions).cpu().numpy()
-        # true_labels = torch.cat(true_labels).cpu().numpy()
+        predictions = torch.cat(predictions).cpu().numpy()
+        true_labels = torch.cat(true_labels).cpu().numpy()
+
         test_cross_entropy_loss /= len(batch.dataset.examples)
 
         return [test_cross_entropy_loss], ['cross entropy loss']

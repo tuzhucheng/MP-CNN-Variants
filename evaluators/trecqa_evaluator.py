@@ -17,12 +17,12 @@ class TRECQAEvaluator(Evaluator):
     def get_scores(self):
         self.model.eval()
         test_cross_entropy_loss = 0
-        sent_ids = []
+        qids = []
         predictions = []
         true_labels = []
 
         for batch in self.data_loader:
-            sent_ids.extend(batch.id.data.cpu().numpy())
+            qids.extend(batch.id.data.cpu().numpy())
             output = self.model(batch.a, batch.b, batch.ext_feats)
             test_cross_entropy_loss += F.cross_entropy(output, batch.label, size_average=False).data[0]
 
@@ -31,7 +31,7 @@ class TRECQAEvaluator(Evaluator):
 
             del output
 
-        sent_ids = list(map(lambda n: int(round(n * 10, 0)) / 10, sent_ids))
+        qids = list(map(lambda n: int(round(n * 10, 0)) / 10, qids))
         predictions = torch.cat(predictions).cpu().numpy()
         true_labels = torch.cat(true_labels).cpu().numpy()
 
@@ -40,10 +40,10 @@ class TRECQAEvaluator(Evaluator):
         qrel_template = '{qid} 0 {docno} {rel}\n'
         results_template = '{qid} 0 {docno} 0 {sim} mpcnn\n'
         with open(qrel_fname, 'w') as f1, open(results_fname, 'w') as f2:
-            qids = range(len(sent_ids))
-            for qid, sent_id, predicted, actual in zip(qids, sent_ids, predictions, true_labels):
-                f1.write(qrel_template.format(qid=qid, docno=sent_id, rel=actual))
-                f2.write(results_template.format(qid=qid, docno=sent_id, sim=predicted))
+            docnos = range(len(qids))
+            for qid, docno, predicted, actual in zip(qids, docnos, predictions, true_labels):
+                f1.write(qrel_template.format(qid=qid, docno=docno, rel=actual))
+                f2.write(results_template.format(qid=qid, docno=docno, sim=predicted))
 
         trec_out = subprocess.check_output(['./utils/trec_eval-9.0.5/trec_eval', '-m', 'map', '-m', 'recip_rank', qrel_fname, results_fname])
         trec_out_lines = str(trec_out, 'utf-8').split('\n')

@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import pprint
 import random
 
 import numpy as np
@@ -57,6 +58,8 @@ if __name__ == '__main__':
     formatter = logging.Formatter('%(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     logger.addHandler(ch)
+
+    logger.info(pprint.pformat(vars(args)))
 
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
         = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, args.device)

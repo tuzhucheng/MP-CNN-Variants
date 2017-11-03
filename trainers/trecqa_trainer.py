@@ -4,6 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from evaluators.trecqa_evaluator import get_map_mrr
 from trainers.trainer import Trainer
 
 
@@ -15,10 +16,14 @@ class TRECQATrainer(Trainer):
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0
+        qids = []
+        true_labels = []
+        predictions = []
         for batch_idx, batch in enumerate(self.train_loader):
+            qids.extend(batch.id.data.cpu().numpy())
             self.optimizer.zero_grad()
             output = self.model(batch.a, batch.b, batch.ext_feats)
-            loss = F.cross_entropy(output, batch.label)
+            loss = F.cross_entropy(output, batch.label, size_average=False)
             total_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
@@ -29,8 +34,18 @@ class TRECQATrainer(Trainer):
                     100. * batch_idx / (len(self.train_loader)), loss.data[0])
                 )
 
+            true_labels.extend(batch.label.data.cpu().numpy())
+            predictions.extend(output.data.exp()[:, 1].cpu().numpy())
+
+        qids = list(map(lambda n: int(round(n * 10, 0)) / 10, qids))
+
+        mean_average_precision, mean_reciprocal_rank = get_map_mrr(qids, predictions, true_labels, self.train_loader.device)
+        average_loss = total_loss / len(batch.dataset.examples)
+
         if self.use_tensorboard:
-            self.writer.add_scalar('trecqa/train/cross_entropy_loss', total_loss, epoch)
+            self.writer.add_scalar('trecqa/train/cross_entropy_loss', average_loss, epoch)
+            self.writer.add_scalar('trecqa/train/map', mean_average_precision, epoch)
+            self.writer.add_scalar('trecqa/train/mrr', mean_reciprocal_rank, epoch)
 
         return total_loss
 

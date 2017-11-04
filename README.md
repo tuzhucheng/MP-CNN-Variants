@@ -24,24 +24,37 @@ Directory layout should be like this:
 │   └── GloVe/
 ```
 
+## SICK Dataset
+
 To run MP-CNN on the SICK dataset mimicking the original paper as closely as possible, use the following command:
 
 ```
-python main.py mpcnn.sick.model.castor --dataset sick --epochs 19 --epsilon 1e-7 --dropout 0
+python main.py saved_models/mpcnn.sick.model --dataset sick --epochs 19 --epsilon 1e-7 --dropout 0
 ```
 
 Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
 
 You should be able to obtain Pearson's p to be 0.8684 and Spearman's r to be 0.8083, comparable to the results obtained in the paper (0.8686 and 0.8047).
 
+## MSRVID Dataset
+
 To run MP-CNN on the MSRVID dataset, use the following command:
 ```
-python main.py mpcnn.msrvid.model.castor --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
+python main.py saved_models/mpcnn.msrvid.model --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
 ```
 
 You should be able to obtain Pearson's p to be 0.8911, for reference the performance in the paper is 0.9090.
 
-To run MP-CNN on TrecQA, you first need to download and compile the `trec_eval` tool using the `get_trec_eval.sh` script.
+## TrecQA Dataset
+
+To run MP-CNN on TrecQA, you first need to the `get_trec_eval.sh` script in `utils`.
+
+Then, you can run:
+```
+python main.py saved_models/mpcnn.trecqa.model --dataset trecqa --epochs 5 --regularization 0.0005 --dropout 0.5 --eps 0.1
+```
+
+You should be able to get a map (mean average precision) of 0.7904 and mrr (mean reciprocal rank) of 0.8223.
 
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 

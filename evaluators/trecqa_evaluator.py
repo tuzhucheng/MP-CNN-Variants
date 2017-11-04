@@ -1,9 +1,7 @@
 import os
-import re
 import subprocess
 import time
 
-import torch
 import torch.nn.functional as F
 
 from evaluators.evaluator import Evaluator

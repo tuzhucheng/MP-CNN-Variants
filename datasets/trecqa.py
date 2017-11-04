@@ -5,7 +5,6 @@ from torchtext.data.dataset import Dataset
 from torchtext.data.example import Example
 from torchtext.data.field import Field
 from torchtext.data.iterator import BucketIterator
-from torchtext.data.pipeline import Pipeline
 from torchtext.vocab import Vectors
 
 from datasets.idf_utils import get_pairwise_word_to_doc_freq, get_pairwise_overlap_features

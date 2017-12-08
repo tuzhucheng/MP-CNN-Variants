@@ -1,6 +1,7 @@
 from trainers.sick_trainer import SICKTrainer
 from trainers.msrvid_trainer import MSRVIDTrainer
 from trainers.trecqa_trainer import TRECQATrainer
+from trainers.wikiqa_trainer import WikiQATrainer
 
 
 class MPCNNTrainerFactory(object):
@@ -10,8 +11,10 @@ class MPCNNTrainerFactory(object):
     trainer_map = {
         'sick': SICKTrainer,
         'msrvid': MSRVIDTrainer,
-        'trecqa': TRECQATrainer
+        'trecqa': TRECQATrainer,
+        'wikiqa': WikiQATrainer
     }
+
     @staticmethod
     def get_trainer(dataset_name, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
         if dataset_name not in MPCNNTrainerFactory.trainer_map:

@@ -7,10 +7,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from trainers.trainer import Trainer
 
 
-class SICKTrainer(Trainer):
+class QATrainer(Trainer):
 
     def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(SICKTrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+        super(QATrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -18,7 +18,7 @@ class SICKTrainer(Trainer):
         for batch_idx, batch in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             output = self.model(batch.sentence_1, batch.sentence_2, batch.ext_feats)
-            loss = F.kl_div(output, batch.label)
+            loss = F.cross_entropy(output, batch.label, size_average=False)
             total_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
@@ -29,8 +29,12 @@ class SICKTrainer(Trainer):
                     100. * batch_idx / (len(self.train_loader)), loss.data[0])
                 )
 
+        average_loss, mean_average_precision, mean_reciprocal_rank = self.evaluate(self.train_evaluator, 'train')
+
         if self.use_tensorboard:
-            self.writer.add_scalar('sick/train/kl_div_loss', total_loss, epoch)
+            self.writer.add_scalar('{}/train/cross_entropy_loss'.format(self.train_loader.dataset.NAME), average_loss, epoch)
+            self.writer.add_scalar('{}/train/map'.format(self.train_loader.dataset.NAME), mean_average_precision, epoch)
+            self.writer.add_scalar('{}/train/mrr'.format(self.train_loader.dataset.NAME), mean_reciprocal_rank, epoch)
 
         return total_loss
 
@@ -45,12 +49,13 @@ class SICKTrainer(Trainer):
             self.train_epoch(epoch)
 
             dev_scores = self.evaluate(self.dev_evaluator, 'dev')
-            new_loss = dev_scores[2]
+            new_loss, mean_average_precision, mean_reciprocal_rank = dev_scores
 
             if self.use_tensorboard:
-                self.writer.add_scalar('sick/lr', self.optimizer.param_groups[0]['lr'], epoch)
-                self.writer.add_scalar('sick/dev/pearson_r', dev_scores[0], epoch)
-                self.writer.add_scalar('sick/dev/kl_div_loss', new_loss, epoch)
+                self.writer.add_scalar('{}/lr'.format(self.train_loader.dataset.NAME), self.optimizer.param_groups[0]['lr'], epoch)
+                self.writer.add_scalar('{}/dev/cross_entropy_loss'.format(self.train_loader.dataset.NAME), new_loss, epoch)
+                self.writer.add_scalar('{}/dev/map'.format(self.train_loader.dataset.NAME), mean_average_precision, epoch)
+                self.writer.add_scalar('{}/dev/mrr'.format(self.train_loader.dataset.NAME), mean_reciprocal_rank, epoch)
 
             end = time.time()
             duration = end - start

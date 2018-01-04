@@ -63,9 +63,9 @@ These are not the optimal hyperparameters but they are decent. This README will 
 You also need `trec_eval` for this dataset, similar to TrecQA.
 
 Then, you can run:
-``
+```
 python main.py mpcnn.wikiqa.model --epochs 10 --dataset wikiqa --batch-size 64 --lr 0.0004 --regularization 0.02
-``
+```
 | Implementation and config        | map    | mrr    |
 | -------------------------------- |:------:|:------:|
 | Paper                            | 0.693  | 0.709  |

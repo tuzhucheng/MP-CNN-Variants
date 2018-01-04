@@ -58,6 +58,23 @@ You should be able to get a map (mean average precision) of 0.7904 and mrr (mean
 
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 
+## WikiQA Dataset
+
+You also need `trec_eval` for this dataset, similar to TrecQA.
+
+Then, you can run:
+``
+python main.py mpcnn.wikiqa.model --epochs 10 --dataset wikiqa --batch-size 64 --lr 0.0004 --regularization 0.02
+``
+| Implementation and config        | map    | mrr    |
+| -------------------------------- |:------:|:------:|
+| Paper                            | 0.693  | 0.709  |
+| PyTorch using above config       | 0.693  | 0.7091 |
+
+The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
+
+These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
+
 To see all options available, use
 ```
 python main.py --help

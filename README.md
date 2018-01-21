@@ -34,7 +34,7 @@ python main.py mpcnn.sick.model --dataset sick --epochs 19 --epsilon 1e-7 --drop
 
 Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
 
-You should be able to obtain Pearson's p to be 0.8684 and Spearman's r to be 0.8083, comparable to the results obtained in the paper (0.8686 and 0.8047).
+You should be able to obtain Pearson's p to be 0.8767 and Spearman's r to be 0.8147, comparable to the results obtained in the paper (0.8686 and 0.8047).
 
 ## MSRVID Dataset
 
@@ -43,7 +43,7 @@ To run MP-CNN on the MSRVID dataset, use the following command:
 python main.py mpcnn.msrvid.model --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
 ```
 
-You should be able to obtain Pearson's p to be 0.8911, for reference the performance in the paper is 0.9090.
+You should be able to obtain Pearson's p to be 0.8893, for reference the performance in the paper is 0.9090.
 
 ## TrecQA Dataset
 
@@ -54,7 +54,7 @@ Then, you can run:
 python main.py mpcnn.trecqa.model --dataset trecqa --epochs 5 --regularization 0.0005 --dropout 0.5 --eps 0.1
 ```
 
-You should be able to get a map (mean average precision) of 0.7904 and mrr (mean reciprocal rank) of 0.8223.
+You should be able to get a map (mean average precision) of 0.7838 and mrr (mean reciprocal rank) of 0.8228.
 
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 
@@ -69,7 +69,7 @@ python main.py mpcnn.wikiqa.model --epochs 10 --dataset wikiqa --batch-size 64 -
 | Implementation and config        | map    | mrr    |
 | -------------------------------- |:------:|:------:|
 | Paper                            | 0.693  | 0.709  |
-| PyTorch using above config       | 0.693  | 0.7091 |
+| PyTorch using above config       | 0.6512  | 0.6624 |
 
 The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
 

@@ -53,7 +53,7 @@ class MPCNN(nn.Module):
             nn.Tanh(),
             nn.Dropout(dropout),
             nn.Linear(hidden_layer_units, num_classes),
-            nn.LogSoftmax()
+            nn.LogSoftmax(1)
         )
 
     def _get_blocks_for_sentence(self, sent):

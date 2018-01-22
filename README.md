@@ -54,7 +54,7 @@ Then, you can run:
 python main.py mpcnn.trecqa.model --dataset trecqa --epochs 5 --regularization 0.0005 --dropout 0.5 --eps 0.1
 ```
 
-You should be able to get a map (mean average precision) of 0.7838 and mrr (mean reciprocal rank) of 0.8228. # TODO - update result since code is updated.
+You should be able to get a map (mean average precision) of 0.776 and mrr (mean reciprocal rank) of 0.8065.
 
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 

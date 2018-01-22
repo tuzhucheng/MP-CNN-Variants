@@ -23,13 +23,20 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
         """
         Create a Castor dataset involving pairs of texts
         """
-        fields = [('id', self.ID_FIELD), ('sentence_1', self.TEXT_FIELD), ('sentence_2', self.TEXT_FIELD), ('ext_feats', self.EXT_FEATS_FIELD),
-                ('label', self.LABEL_FIELD), ('sentence_1_raw', self.RAW_TEXT_FIELD), ('sentence_2_raw', self.RAW_TEXT_FIELD)]
-
-        examples = []
         with open(os.path.join(path, 'a.toks'), 'r') as f1, open(os.path.join(path, 'b.toks'), 'r') as f2:
             sent_list_1 = [l.rstrip('.\n').split(' ') for l in f1]
             sent_list_2 = [l.rstrip('.\n').split(' ') for l in f2]
+
+        sent1_max_len = max([len(s) for s in sent_list_1])
+        sent2_max_len = max([len(s) for s in sent_list_2])
+        self.max_len = max(sent1_max_len, sent2_max_len)
+
+        self.TEXT_FIELD.fix_length = self.max_len
+
+        fields = [('id', self.ID_FIELD), ('sentence_1', self.TEXT_FIELD), ('sentence_2', self.TEXT_FIELD), ('ext_feats', self.EXT_FEATS_FIELD),
+                  ('label', self.LABEL_FIELD), ('sentence_1_raw', self.RAW_TEXT_FIELD), ('sentence_2_raw', self.RAW_TEXT_FIELD)]
+
+        examples = []
 
         word_to_doc_cnt = get_pairwise_word_to_doc_freq(sent_list_1, sent_list_2)
         overlap_feats = get_pairwise_overlap_features(sent_list_1, sent_list_2, word_to_doc_cnt)

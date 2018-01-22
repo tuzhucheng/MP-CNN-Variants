@@ -1,36 +1,27 @@
-from collections import defaultdict
-from enum import Enum
-import math
 import os
 
-import nltk
-import numpy as np
 import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
-import torch.utils.data as data
+import torch.nn as nn
 
-import preprocessing
-
-nltk.download('stopwords', quiet=True)
-from nltk.corpus import stopwords
-
-# logging setup
-import logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+from datasets.sick import SICK
+from datasets.msrvid import MSRVID
+from datasets.trecqa import TRECQA
+from datasets.wikiqa import WikiQA
 
 
-class DatasetType(Enum):
-    TRAIN = 1
-    TEST = 2
-    DEV = 3
+class UnknownWordVecCache(object):
+    """
+    Caches the first randomly generated word vector for a certain size to make it is reused.
+    """
+    cache = {}
+
+    @classmethod
+    def unk(cls, tensor):
+        size_tup = tuple(tensor.size())
+        if size_tup not in cls.cache:
+            cls.cache[size_tup] = torch.Tensor(tensor.size())
+            cls.cache[size_tup].normal_(0, 0.01)
+        return cls.cache[size_tup]
 
 
 class MPCNNDatasetFactory(object):
@@ -38,211 +29,40 @@ class MPCNNDatasetFactory(object):
     Get the corresponding Dataset class for a particular dataset.
     """
     @staticmethod
-    def get_dataset(dataset_name, word_vectors_file, batch_size, cuda, sample, attention):
-        extra_args = {'shuffle': True}
-        dev_loader = None
-        if sample:
-            sample_indices = list(range(sample))
-            subset_random_sampler = data.sampler.SubsetRandomSampler(sample_indices)
-            extra_args['sampler'] = subset_random_sampler
-            extra_args['shuffle'] = False
+    def get_dataset(dataset_name, word_vectors_dir, word_vectors_file, batch_size, device):
         if dataset_name == 'sick':
-            train_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TRAIN, cuda, attention), batch_size=batch_size, **extra_args)
-            test_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.TEST, cuda, attention), batch_size=batch_size, **extra_args)
-            dev_loader = torch.utils.data.DataLoader(SICKDataset(DatasetType.DEV, cuda, attention), batch_size=batch_size, **extra_args)
+            dataset_root = os.path.join(os.pardir, 'data', 'sick/')
+            train_loader, dev_loader, test_loader = SICK.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = SICK.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(SICK.TEXT_FIELD.vocab.vectors)
+            return SICK, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrvid':
-            train_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TRAIN, cuda, attention), batch_size=batch_size, **extra_args)
-            test_loader = torch.utils.data.DataLoader(MSRVIDDataset(DatasetType.TEST, cuda, attention), batch_size=batch_size, **extra_args)
+            dataset_root = os.path.join(os.pardir, 'data', 'msrvid/')
+            dev_loader = None
+            train_loader, test_loader = MSRVID.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = MSRVID.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(MSRVID.TEXT_FIELD.vocab.vectors)
+            return MSRVID, embedding, train_loader, test_loader, dev_loader
+        elif dataset_name == 'trecqa':
+            if not os.path.exists('./utils/trec_eval-9.0.5/trec_eval'):
+                raise FileNotFoundError('TrecQA requires the trec_eval tool to run. Please run get_trec_eval.sh inside utils/ (as working directory) before continuing.')
+            dataset_root = os.path.join(os.pardir, 'data', 'TrecQA/')
+            train_loader, dev_loader, test_loader = TRECQA.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = TRECQA.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(TRECQA.TEXT_FIELD.vocab.vectors)
+            return TRECQA, embedding, train_loader, test_loader, dev_loader
+        elif dataset_name == 'wikiqa':
+            if not os.path.exists('./utils/trec_eval-9.0.5/trec_eval'):
+                raise FileNotFoundError('TrecQA requires the trec_eval tool to run. Please run get_trec_eval.sh inside Castor/utils (as working directory) before continuing.')
+            dataset_root = os.path.join(os.pardir, 'data', 'WikiQA/')
+            train_loader, dev_loader, test_loader = WikiQA.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = WikiQA.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(WikiQA.TEXT_FIELD.vocab.vectors)
+            return WikiQA, embedding, train_loader, test_loader, dev_loader
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
 
-        word_index, embedding = preprocessing.get_glove_embedding(word_vectors_file, train_loader.dataset.dataset_root)
-        logger.info('Finished loading GloVe embedding for vocab in data...')
-
-        train_loader.dataset.initialize(word_index, embedding)
-        test_loader.dataset.initialize(word_index, embedding)
-        if dev_loader is not None:
-            dev_loader.dataset.initialize(word_index, embedding)
-        return train_loader, test_loader, dev_loader
-
-
-class MPCNNDataset(data.Dataset):
-    train_folder = 'train'
-    test_folder = 'test'
-    dev_folder = 'dev'
-    # subclass will override fields below
-    dataset_root = None
-    num_classes = None
-
-    def __init__(self, dataset_type, cuda, attention):
-        if not isinstance(dataset_type, DatasetType):
-            raise ValueError('dataset_type ({}) must be of type DatasetType enum'.format(dataset_type))
-
-        if dataset_type == DatasetType.TRAIN:
-            subfolder = MPCNNDataset.train_folder
-        elif dataset_type == DatasetType.TEST:
-            subfolder = MPCNNDataset.test_folder
-        else:
-            subfolder = MPCNNDataset.dev_folder
-
-        self.dataset_dir = os.path.join(self.dataset_root, subfolder)
-        if not os.path.exists(self.dataset_dir):
-            raise RuntimeError('{} does not exist'.format(self.dataset_dir))
-
-        self.cuda = cuda
-        self.attention = attention
-        self.max_length = -10000
-        self.unk = torch.Tensor(300)
-        self.unk.normal_(0, 0.01)
-
-    def initialize(self, word_index, embedding):
-        """
-        Convert sentences into sentence embeddings.
-        """
-        sent_a = self._load(self.dataset_dir, 'a.txt')
-        sent_b = self._load(self.dataset_dir, 'b.txt')
-        word_to_doc_cnt = defaultdict(int)
-
-        # obtain max sentence length to use as dimension for padding to support batching
-        sent_a_tokens, sent_b_tokens = [], []
-        for i in range(len(sent_a)):
-            sa_tokens = sent_a[i].split(' ')
-            sb_tokens = sent_b[i].split(' ')
-            self.max_length = max(self.max_length, len(sa_tokens), len(sb_tokens))
-            sent_a_tokens.append(sa_tokens)
-            sent_b_tokens.append(sb_tokens)
-
-            unique_tokens = set(sa_tokens) | set(sb_tokens)
-            for t in unique_tokens:
-                word_to_doc_cnt[t] += 1
-
-
-        self.sentences = []
-        stoplist = set(stopwords.words('english'))
-        num_docs = len(word_to_doc_cnt)
-        for i in range(len(sent_a)):
-            sent_pair = {}
-            sent_pair['a'] = self._get_sentence_embeddings(sent_a_tokens[i], word_index, embedding)
-            sent_pair['b'] = self._get_sentence_embeddings(sent_b_tokens[i], word_index, embedding)
-
-            if self.attention:
-                a_transposed = sent_pair['a'].transpose(1, 0)
-                a_norms = torch.norm(a_transposed, p=2, dim=1, keepdim=True)
-                b_norms = torch.norm(sent_pair['b'], p=2, dim=0, keepdim=True)
-                norm_products = torch.mm(a_norms, b_norms)
-                max_epsilon = torch.Tensor([1e-8]).expand(a_norms.size(0), b_norms.size(1))
-                max_epsilon = max_epsilon.cuda() if self.cuda else max_epsilon
-                norm_products = torch.max(norm_products, max_epsilon)
-                attention = torch.mm(a_transposed, sent_pair['b']) / norm_products
-                attention_col_sum = F.softmax(attention.sum(0)).view(-1).data
-                attention_row_sum = F.softmax(attention.sum(1)).view(-1).data
-
-                sent_a_df = torch.ones(attention_col_sum.size()[0])
-                sent_b_df = torch.ones(attention_row_sum.size()[0])
-                sent_a_df[:len(sent_a_tokens[i])] = torch.Tensor([word_to_doc_cnt[w] for w in sent_a_tokens[i]])
-                sent_b_df[:len(sent_b_tokens[i])] = torch.Tensor([word_to_doc_cnt[w] for w in sent_b_tokens[i]])
-                if self.cuda:
-                    sent_a_df, sent_b_df = sent_a_df.cuda(), sent_b_df.cuda()
-
-                attention_col_sum /= sent_a_df
-                attention_row_sum /= sent_b_df
-
-                col_sum_expanded = attention_col_sum.expand(300, attention_col_sum.size()[0])
-                row_sum_expanded = attention_row_sum.expand(300, attention_row_sum.size()[0])
-                weighted_left = col_sum_expanded * sent_pair['a']
-                weighted_right = row_sum_expanded * sent_pair['b']
-                sent_pair['a'] = torch.cat([sent_pair['a'], weighted_left])
-                sent_pair['b'] = torch.cat([sent_pair['b'], weighted_right])
-
-            tokens_a_set, tokens_b_set = set(sent_a_tokens[i]), set(sent_b_tokens[i])
-            intersect = tokens_a_set & tokens_b_set
-            overlap = len(intersect) / (len(tokens_a_set) + len(tokens_b_set))
-            idf_intersect = sum(np.math.log(num_docs / word_to_doc_cnt[w]) for w in intersect)
-            idf_weighted_overlap = idf_intersect / (len(tokens_a_set) + len(tokens_b_set))
-
-            tokens_a_set_no_stop = set(w for w in sent_a_tokens[i] if w not in stoplist)
-            tokens_b_set_no_stop = set(w for w in sent_b_tokens[i] if w not in stoplist)
-            intersect_no_stop = tokens_a_set_no_stop & tokens_b_set_no_stop
-            overlap_no_stop = len(intersect_no_stop) / (len(tokens_a_set_no_stop) + len(tokens_b_set_no_stop))
-            idf_intersect_no_stop = sum(np.math.log(num_docs / word_to_doc_cnt[w]) for w in intersect_no_stop)
-            idf_weighted_overlap_no_stop = idf_intersect_no_stop / (len(tokens_a_set_no_stop) + len(tokens_b_set_no_stop))
-            ext_feats = torch.Tensor([overlap, idf_weighted_overlap, overlap_no_stop, idf_weighted_overlap_no_stop])
-            ext_feats = ext_feats.cuda() if self.cuda else ext_feats
-            sent_pair['ext_feats'] = ext_feats
-
-            self.sentences.append(sent_pair)
-        self.labels = self._load(self.dataset_dir, 'sim.txt', float)
-
-    def _load(self, dataset_dir, fname, type_converter=str):
-        data = []
-        with open(os.path.join(dataset_dir, fname), 'r') as f:
-            for line in f:
-                stripped_line = line.rstrip('.\n')
-                item = type_converter(stripped_line)
-                data.append(item)
-        return data
-
-    def _get_sentence_embeddings(self, tokens, word_index, embedding):
-        sentence_embedding = torch.zeros(300, self.max_length)
-        found_pos, found_emb_idx = [], []
-        for i, token in enumerate(tokens):
-            if token in word_index:
-                found_pos.append(i)
-                found_emb_idx.append(word_index[token])
-            else:
-                sentence_embedding[:, i] = self.unk
-
-        found_word_vecs = embedding(Variable(torch.LongTensor(found_emb_idx)))
-        for i, v in enumerate(found_pos):
-            sentence_embedding[:, v] = found_word_vecs[i].data
-        return sentence_embedding.cuda() if self.cuda else sentence_embedding
-
-    def __getitem__(self, idx):
-        return self.sentences[idx], self.labels[idx]
-
-    def __len__(self):
-        return len(self.labels)
-
-
-class SICKDataset(MPCNNDataset):
-
-    dataset_root = os.path.join(os.pardir, 'data', 'sick')
-    num_classes = 5
-
-    def __init__(self, dataset_type, cuda, attention):
-        super(SICKDataset, self).__init__(dataset_type, cuda, attention)
-
-    def initialize(self, word_index, embedding):
-        super(SICKDataset, self).initialize(word_index, embedding)
-        new_labels = torch.zeros(self.__len__(), self.num_classes)
-        for i, sim in enumerate(self.labels):
-            ceil, floor = math.ceil(sim), math.floor(sim)
-            if ceil == floor:
-                new_labels[i][floor - 1] = 1
-            else:
-                new_labels[i][floor - 1] = ceil - sim
-                new_labels[i][ceil - 1] = sim - floor
-
-        self.labels = new_labels.cuda() if self.cuda else new_labels
-
-
-class MSRVIDDataset(MPCNNDataset):
-
-    dataset_root = os.path.join(os.pardir, 'data', 'msrvid')
-    num_classes = 6
-
-    def __init__(self, dataset_type, cuda, attention):
-        super(MSRVIDDataset, self).__init__(dataset_type, cuda, attention)
-
-    def initialize(self, word_index, embedding):
-        super(MSRVIDDataset, self).initialize(word_index, embedding)
-        new_labels = torch.zeros(self.__len__(), self.num_classes)
-        for i, sim in enumerate(self.labels):
-            ceil, floor = math.ceil(sim), math.floor(sim)
-            if ceil == floor:
-                new_labels[i][floor] = 1
-            else:
-                new_labels[i][floor] = ceil - sim
-                new_labels[i][ceil] = sim - floor
-
-        self.labels = new_labels.cuda() if self.cuda else new_labels

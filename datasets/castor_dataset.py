@@ -16,13 +16,15 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
     TEXT_FIELD = None
     EXT_FEATS_FIELD = None
     LABEL_FIELD = None
+    RAW_TEXT_FIELD = None
 
     @abstractmethod
     def __init__(self, path):
         """
         Create a Castor dataset involving pairs of texts
         """
-        fields = [('id', self.ID_FIELD), ('sentence_1', self.TEXT_FIELD), ('sentence_2', self.TEXT_FIELD), ('ext_feats', self.EXT_FEATS_FIELD), ('label', self.LABEL_FIELD)]
+        fields = [('id', self.ID_FIELD), ('sentence_1', self.TEXT_FIELD), ('sentence_2', self.TEXT_FIELD), ('ext_feats', self.EXT_FEATS_FIELD),
+                ('label', self.LABEL_FIELD), ('sentence_1_raw', self.RAW_TEXT_FIELD), ('sentence_2_raw', self.RAW_TEXT_FIELD)]
 
         examples = []
         with open(os.path.join(path, 'a.toks'), 'r') as f1, open(os.path.join(path, 'b.toks'), 'r') as f2:
@@ -36,7 +38,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
             for pair_id, l1, l2, ext_feats, label in zip(id_file, sent_list_1, sent_list_2, overlap_feats, label_file):
                 pair_id = pair_id.rstrip('.\n')
                 label = label.rstrip('.\n')
-                example = Example.fromlist([pair_id, l1, l2, ext_feats, label], fields)
+                example = Example.fromlist([pair_id, l1, l2, ext_feats, label, ' '.join(l1), ' '.join(l2)], fields)
                 examples.append(example)
 
         super(CastorPairDataset, self).__init__(examples, fields)

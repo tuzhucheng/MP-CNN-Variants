@@ -5,9 +5,9 @@ import pprint
 import random
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.optim as optim
-
 from dataset import MPCNNDatasetFactory
 from evaluation import MPCNNEvaluatorFactory
 from model import MPCNN
@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
     parser.add_argument('--tensorboard', action='store_true', default=False, help='use TensorBoard to visualize training (default: false)')
     parser.add_argument('--run-label', type=str, help='label to describe run')
+    parser.add_argument('--save-predictions', action='store_true', default=False, help='save predictions for debugging (default: false)')
     args = parser.parse_args()
 
     random.seed(args.seed)
@@ -111,3 +112,26 @@ if __name__ == '__main__':
     logger.info('Evaluation metrics for test')
     logger.info('\t'.join([' '] + metric_names))
     logger.info('\t'.join(['test'] + list(map(str, scores))))
+
+    if args.save_predictions:
+        for dataset_name, loader in zip(('train', 'test', 'dev'), (train_loader, test_loader, dev_loader)):
+            if loader is None:
+                continue
+
+            all_sent_ids, all_predictions, all_labels = [], [], []
+            all_sentences_1, all_sentences_2 = [], []
+            for batch in loader:
+                sent_ids = batch.id.int().cpu().data.numpy()
+                predictions = model(batch.sentence_1, batch.sentence_2, batch.ext_feats)
+                labels = batch.label
+                predictions, labels = train_evaluator.get_final_prediction_and_label(predictions, labels)
+                predictions = predictions.cpu().data.numpy()
+                labels = labels.cpu().data.numpy()
+                all_sent_ids.extend(sent_ids)
+                all_predictions.extend(predictions)
+                all_labels.extend(labels)
+                all_sentences_1.extend(batch.sentence_1_raw)
+                all_sentences_2.extend(batch.sentence_2_raw)
+
+            df = pd.DataFrame({'id': all_sent_ids, 'sentence1': all_sentences_1, 'sentence2': all_sentences_2, 'predictions': all_predictions, 'labels': all_labels})
+            df.to_csv('{}_{}_predictions.csv'.format(args.dataset, dataset_name), index=False)

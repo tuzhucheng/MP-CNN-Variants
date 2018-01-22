@@ -1,5 +1,6 @@
 from scipy.stats import pearsonr, spearmanr
 import torch
+from torch.autograd import Variable
 import torch.nn.functional as F
 
 from evaluators.evaluator import Evaluator
@@ -41,3 +42,15 @@ class SICKEvaluator(Evaluator):
         spearman_r = spearmanr(predictions, true_labels)[0]
 
         return [pearson_r, spearman_r, test_kl_div_loss], ['pearson_r', 'spearman_r', 'KL-divergence loss']
+
+    def get_final_prediction_and_label(self, batch_predictions, batch_labels):
+        num_classes = self.dataset_cls.NUM_CLASSES
+        predict_classes = torch.arange(1, num_classes + 1).expand(batch_predictions.size(0), num_classes)
+        if self.data_loader.device != -1:
+            with torch.cuda.device(self.device):
+                predict_classes = predict_classes.cuda()
+
+        predictions = (Variable(predict_classes) * batch_predictions).sum(dim=1)
+        true_labels = (Variable(predict_classes) * batch_labels).sum(dim=1)
+
+        return predictions, true_labels

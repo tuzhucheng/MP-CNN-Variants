@@ -1,5 +1,5 @@
 import torch
-from torchtext.data.field import Field
+from torchtext.data.field import Field, RawField
 from torchtext.data.iterator import BucketIterator
 from torchtext.vocab import Vectors
 
@@ -13,6 +13,7 @@ class TRECQA(CastorPairDataset):
     TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it to compute external features
     EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
     LABEL_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
+    RAW_TEXT_FIELD = RawField()
 
     @staticmethod
     def sort_key(ex):

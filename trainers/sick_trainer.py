@@ -9,15 +9,20 @@ from trainers.trainer import Trainer
 
 class SICKTrainer(Trainer):
 
-    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(SICKTrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(SICKTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0
         for batch_idx, batch in enumerate(self.train_loader):
             self.optimizer.zero_grad()
-            output = self.model(batch.sentence_1, batch.sentence_2, batch.ext_feats)
+
+            # Select embedding
+            sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
+            sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+
+            output = self.model(sent1, sent2, batch.ext_feats)
             loss = F.kl_div(output, batch.label)
             total_loss += loss.data[0]
             loss.backward()

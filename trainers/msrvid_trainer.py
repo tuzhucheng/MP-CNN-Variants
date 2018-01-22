@@ -11,8 +11,8 @@ from trainers.trainer import Trainer
 
 class MSRVIDTrainer(Trainer):
 
-    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(MSRVIDTrainer, self).__init__(model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+        super(MSRVIDTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -34,7 +34,11 @@ class MSRVIDTrainer(Trainer):
                 left_out_val_labels.append(batch.label)
                 continue
             self.optimizer.zero_grad()
-            output = self.model(batch.sentence_1, batch.sentence_2, batch.ext_feats)
+            # Select embedding
+            sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
+            sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+
+            output = self.model(sent1, sent2, batch.ext_feats)
             loss = F.kl_div(output, batch.label)
             total_loss += loss.data[0]
             loss.backward()
@@ -67,7 +71,11 @@ class MSRVIDTrainer(Trainer):
             all_predictions, all_true_labels = [], []
             val_kl_div_loss = 0
             for i in range(len(left_out_a)):
-                output = self.model(left_out_a[i], left_out_b[i], left_out_ext_feats[i])
+                # Select embedding
+                sent1 = self.embedding(left_out_a[i]).transpose(1, 2)
+                sent2 = self.embedding(left_out_b[i]).transpose(1, 2)
+
+                output = self.model(sent1, sent2, left_out_ext_feats[i])
                 val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).data[0]
                 predict_classes = torch.arange(0, self.train_loader.dataset.NUM_CLASSES).expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
                 if self.train_loader.device != -1:

@@ -6,10 +6,9 @@ import torch.nn.functional as F
 
 class MPCNN(nn.Module):
 
-    def __init__(self, embedding, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats):
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats):
         super(MPCNN, self).__init__()
-        self.embedding = embedding
-        self.n_word_dim = embedding.weight.size(1)
+        self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
         self.n_per_dim_filters = n_per_dim_filters
         self.filter_widths = filter_widths
@@ -122,11 +121,7 @@ class MPCNN(nn.Module):
 
         return torch.cat(comparison_feats, dim=1)
 
-    def forward(self, sent1_idx, sent2_idx, ext_feats=None):
-        # Select embedding
-        sent1 = self.embedding(sent1_idx).transpose(1, 2)
-        sent2 = self.embedding(sent2_idx).transpose(1, 2)
-
+    def forward(self, sent1, sent2, ext_feats=None):
         # Sentence modeling module
         sent1_block_a, sent1_block_b = self._get_blocks_for_sentence(sent1)
         sent2_block_a, sent2_block_b = self._get_blocks_for_sentence(sent2)

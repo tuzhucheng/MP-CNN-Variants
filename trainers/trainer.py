@@ -4,8 +4,9 @@ class Trainer(object):
     Abstraction for training a model on a Dataset.
     """
 
-    def __init__(self, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
         self.model = model
+        self.embedding = embedding
         self.optimizer = trainer_config['optimizer']
         self.train_loader = train_loader
         self.batch_size = trainer_config['batch_size']

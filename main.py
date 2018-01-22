@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid, trecqa, wikiqa]', default='sick')
     parser.add_argument('--word-vectors-dir', help='word vectors directory', default=os.path.join(os.pardir, 'data', 'GloVe'))
     parser.add_argument('--word-vectors-file', help='word vectors filename', default='glove.840B.300d.txt')
+    parser.add_argument('--word-vectors-dim', type=int, default=300, help='number of dimensions of word vectors (default: 300)')
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--device', type=int, default=0, help='GPU device, -1 for CPU (default: 0)')
     parser.add_argument('--sparse-features', action='store_true', default=False, help='use sparse features (default: false)')
@@ -64,9 +65,13 @@ if __name__ == '__main__':
 
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
         = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, args.device)
+    embedding.weight.requires_grad = False
+    if args.device != -1:
+        with torch.cuda.device(args.device):
+            embedding = embedding.cuda()
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-    model = MPCNN(embedding, args.holistic_filters, args.per_dim_filters, filter_widths,
+    model = MPCNN(args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
                     args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features)
 
     if args.device != -1:
@@ -81,9 +86,9 @@ if __name__ == '__main__':
     else:
         raise ValueError('optimizer not recognized: it should be either adam or sgd')
 
-    train_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, train_loader, args.batch_size, args.device)
-    test_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, test_loader, args.batch_size, args.device)
-    dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, dev_loader, args.batch_size, args.device)
+    train_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, train_loader, args.batch_size, args.device)
+    test_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
+    dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, dev_loader, args.batch_size, args.device)
 
     trainer_config = {
         'optimizer': optimizer,
@@ -96,7 +101,7 @@ if __name__ == '__main__':
         'run_label': args.run_label,
         'logger': logger
     }
-    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     if not args.skip_training:
         total_params = 0
@@ -107,7 +112,7 @@ if __name__ == '__main__':
         trainer.train(args.epochs)
 
     model = torch.load(args.model_outfile)
-    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, test_loader, args.batch_size, args.device)
+    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
     scores, metric_names = saved_model_evaluator.get_scores()
     logger.info('Evaluation metrics for test')
     logger.info('\t'.join([' '] + metric_names))
@@ -122,7 +127,12 @@ if __name__ == '__main__':
             all_sentences_1, all_sentences_2 = [], []
             for batch in loader:
                 sent_ids = batch.id.int().cpu().data.numpy()
-                predictions = model(batch.sentence_1, batch.sentence_2, batch.ext_feats)
+
+                # Select embedding
+                sent1 = embedding(batch.sentence_1).transpose(1, 2)
+                sent2 = embedding(batch.sentence_2).transpose(1, 2)
+
+                predictions = model(sent1, sent2, batch.ext_feats)
                 labels = batch.label
                 predictions, labels = train_evaluator.get_final_prediction_and_label(predictions, labels)
                 predictions = predictions.cpu().data.numpy()

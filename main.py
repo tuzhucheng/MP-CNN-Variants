@@ -36,7 +36,6 @@ if __name__ == '__main__':
     parser.add_argument('--regularization', type=float, default=0.0001, help='Regularization for the optimizer (default: 0.0001)')
     parser.add_argument('--max-window-size', type=int, default=3, help='windows sizes will be [1,max_window_size] and infinity (default: 300)')
     parser.add_argument('--holistic-filters', type=int, default=300, help='number of holistic filters (default: 300)')
-    parser.add_argument('--per-dim-filters', type=int, default=20, help='number of per-dimension filters (default: 20)')
     parser.add_argument('--hidden-units', type=int, default=150, help='number of hidden units in each of the two hidden layers (default: 150)')
     parser.add_argument('--dropout', type=float, default=0.5, help='dropout probability (default: 0.5)')
     parser.add_argument('--seed', type=int, default=1, help='random seed (default: 1)')
@@ -71,7 +70,7 @@ if __name__ == '__main__':
             embedding = embedding.cuda()
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-    model = MPCNN(args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
+    model = MPCNN(args.word_vectors_dim, args.holistic_filters, filter_widths,
                     args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features)
 
     if args.device != -1:

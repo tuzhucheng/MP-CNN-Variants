@@ -15,6 +15,7 @@ class MPCNN(nn.Module):
         self.ext_feats = ext_feats
         holistic_conv_layers = []
         per_dim_conv_layers = []
+        self.kmax = 3
 
         for ws in filter_widths:
             if np.isinf(ws):
@@ -34,16 +35,16 @@ class MPCNN(nn.Module):
         self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
 
         # compute number of inputs to first hidden layer
-        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2 + self.n_word_dim, 2
+        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = self.kmax*2 + n_holistic_filters, 2 + self.n_per_dim_filters*self.n_word_dim, 2
         EXT_FEATS = 4 if ext_feats else 0
-        n_feat_h = len(self.filter_widths) * COMP_2_COMPONENTS
+        n_feat_h = len(self.filter_widths) * COMP_2_COMPONENTS * self.kmax  # 3 is for 3-max pooling
         n_feat_v = (
-            # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
+            # comparison units from holistic conv for k-max pooling for non-infinite widths
             ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
-            # comparison units from holistic conv for min, max, mean pooling for infinite widths
-            3 +
+            # comparison units from holistic conv for k-max pooling for infinite widths
+            self.kmax*2 + 1 +
             # comparison units from per-dim conv
-            (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
+            (len(self.filter_widths) - 1) * self.kmax * COMP_1_COMPONENTS_PER_DIM  # 3 is for 3-max
         )
         n_feat = n_feat_h + n_feat_v + EXT_FEATS
 
@@ -55,58 +56,73 @@ class MPCNN(nn.Module):
             nn.LogSoftmax(1)
         )
 
+    def kmax_pooling(self, x):
+        dim = 2
+        length = x.size(dim)
+        if length >= self.kmax:
+            index = x.topk(self.kmax, dim)[1].sort(dim)[0]
+            return x.gather(dim, index)
+        else:
+            index = x.topk(length, dim)[1].sort(dim)[0]
+            return F.pad(x.gather(dim, index), (0, self.kmax - length))
+
     def _get_blocks_for_sentence(self, sent):
         block_a = {}
         block_b = {}
         for ws in self.filter_widths:
             if np.isinf(ws):
-                sent_flattened, sent_flattened_size = sent.contiguous().view(sent.size(0), 1, -1), sent.size(1) * sent.size(2)
+                sent_flattened = sent.contiguous().view(sent.size(0), 1, -1)
                 block_a[ws] = {
-                    'max': F.max_pool1d(sent_flattened, sent_flattened_size).view(sent.size(0), -1)
+                    'kmax': self.kmax_pooling(sent_flattened)
                 }
                 continue
 
             holistic_conv_out = self.holistic_conv_layers[ws - 1](sent)
             block_a[ws] = {
-                'max': F.max_pool1d(holistic_conv_out, holistic_conv_out.size(2)).contiguous().view(-1, self.n_holistic_filters)
+                'kmax': self.kmax_pooling(holistic_conv_out)
             }
 
             per_dim_conv_out = self.per_dim_conv_layers[ws - 1](sent)
             block_b[ws] = {
-                'max': F.max_pool1d(per_dim_conv_out, per_dim_conv_out.size(2)).contiguous().view(-1, self.n_word_dim, self.n_per_dim_filters)
+                'kmax': self.kmax_pooling(per_dim_conv_out)
             }
         return block_a, block_b
 
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
-        for pool in ('max', ):
+        for pool in ('kmax', ):
             for ws in self.filter_widths:
                 x1 = sent1_block_a[ws][pool]
                 x2 = sent2_block_a[ws][pool]
                 batch_size = x1.size()[0]
-                comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-                comparison_feats.append(F.pairwise_distance(x1, x2))
+                k = x1.size(2)  # k in k-max pooling
+                comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, k))
+                for i in range(k):
+                    comparison_feats.append(F.pairwise_distance(x1[:, :, i], x2[:, :, i]))
         return torch.cat(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
         comparison_feats = []
         ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
-        for pool in ('max', ):
+        for pool in ('kmax', ):
             for ws1 in self.filter_widths:
                 x1 = sent1_block_a[ws1][pool]
                 batch_size = x1.size()[0]
                 for ws2 in self.filter_widths:
                     x2 = sent2_block_a[ws2][pool]
                     if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-                        comparison_feats.append(F.pairwise_distance(x1, x2))
-                        comparison_feats.append(torch.abs(x1 - x2))
+                        k = x1.size(2)
+                        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, k))
+                        for i in range(k):
+                            comparison_feats.append(F.pairwise_distance(x1[:, :, i], x2[:, :, i]))
 
-        for pool in ('max', ):
+                        comparison_feats.append(torch.abs(x1 - x2).sum(dim=2))
+
+        for pool in ('kmax', ):
             for ws in ws_no_inf:
                 oG_1B = sent1_block_b[ws][pool]
                 oG_2B = sent2_block_b[ws][pool]
-                for i in range(0, self.n_per_dim_filters):
+                for i in range(0, oG_1B.size(2)):
                     x1 = oG_1B[:, :, i]
                     x2 = oG_2B[:, :, i]
                     batch_size = x1.size()[0]

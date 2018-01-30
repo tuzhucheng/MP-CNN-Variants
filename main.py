@@ -17,7 +17,7 @@ from train import MPCNNTrainerFactory
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch implementation of Multi-Perspective CNN')
     parser.add_argument('model_outfile', help='file to save final model')
-    parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid, trecqa, wikiqa]', default='sick')
+    parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid, trecqa, wikiqa, sts]', default='sick')
     parser.add_argument('--word-vectors-dir', help='word vectors directory', default=os.path.join(os.pardir, 'data', 'GloVe'))
     parser.add_argument('--word-vectors-file', help='word vectors filename', default='glove.840B.300d.txt')
     parser.add_argument('--word-vectors-dim', type=int, default=300, help='number of dimensions of word vectors (default: 300)')

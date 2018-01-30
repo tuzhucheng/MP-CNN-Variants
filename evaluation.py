@@ -2,6 +2,7 @@ from evaluators.sick_evaluator import SICKEvaluator
 from evaluators.msrvid_evaluator import MSRVIDEvaluator
 from evaluators.trecqa_evaluator import TRECQAEvaluator
 from evaluators.wikiqa_evaluator import WikiQAEvaluator
+from evaluators.sts_evaluator import STSEvaluator
 
 
 class MPCNNEvaluatorFactory(object):
@@ -12,7 +13,8 @@ class MPCNNEvaluatorFactory(object):
         'sick': SICKEvaluator,
         'msrvid': MSRVIDEvaluator,
         'trecqa': TRECQAEvaluator,
-        'wikiqa': WikiQAEvaluator
+        'wikiqa': WikiQAEvaluator,
+        'sts': STSEvaluator
     }
 
     @staticmethod

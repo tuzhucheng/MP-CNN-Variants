@@ -66,8 +66,8 @@ class STSTrainer(Trainer):
                 best_dev_score = dev_scores[0]
                 torch.save(self.model, self.model_outfile)
 
-            if abs(prev_loss - new_loss) <= 0.0002:
-                self.logger.info('Early stopping. Loss changed by less than 0.0002.')
+            if prev_loss < new_loss and prev_loss != 0:
+                self.logger.info('Early stopping.')
                 break
 
             prev_loss = new_loss

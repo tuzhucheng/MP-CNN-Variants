@@ -7,6 +7,7 @@ from datasets.sick import SICK
 from datasets.msrvid import MSRVID
 from datasets.trecqa import TRECQA
 from datasets.wikiqa import WikiQA
+from datasets.sts import STS
 
 
 class UnknownWordVecCache(object):
@@ -37,6 +38,13 @@ class MPCNNDatasetFactory(object):
             embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
             embedding.weight = nn.Parameter(SICK.TEXT_FIELD.vocab.vectors)
             return SICK, embedding, train_loader, test_loader, dev_loader
+        if dataset_name == 'sts':
+            dataset_root = os.path.join(os.pardir, 'data', 'sts/')
+            train_loader, dev_loader, test_loader = STS.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = STS.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(STS.TEXT_FIELD.vocab.vectors)
+            return STS, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrvid':
             dataset_root = os.path.join(os.pardir, 'data', 'msrvid/')
             dev_loader = None

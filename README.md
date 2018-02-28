@@ -2,9 +2,6 @@
 
 This is a PyTorch implementation of MP-CNN as a base model with modifications and additions such as attention and sparse features.
 
-Note, the `master` version of the code current does not implement attention after the torchtext refactoring.
-If you are looking for an implementation with attention, checkout [Release v1.0](https://github.com/tuzhucheng/MP-CNN-Variants/releases/tag/v1.0).
-
 Here is the MP-CNN paper:
 
 * Hua He, Kevin Gimpel, and Jimmy Lin. [Multi-Perspective Sentence Similarity Modeling with Convolutional Neural Networks](http://aclweb.org/anthology/D/D15/D15-1181.pdf). *Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP 2015)*, pages 1576-1586.

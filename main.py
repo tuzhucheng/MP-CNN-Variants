@@ -23,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('--word-vectors-dim', type=int, default=300, help='number of dimensions of word vectors (default: 300)')
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--device', type=int, default=0, help='GPU device, -1 for CPU (default: 0)')
+    parser.add_argument('--attention', action='store_true', default=False, help='use attention (default: false)')
     parser.add_argument('--sparse-features', action='store_true', default=False, help='use sparse features (default: false)')
     parser.add_argument('--batch-size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=10, help='number of epochs to train (default: 10)')
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
     filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
     model = MPCNN(args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
-                    args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features)
+                    args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
 
     if args.device != -1:
         with torch.cuda.device(args.device):

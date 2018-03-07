@@ -10,7 +10,7 @@ import torch
 import torch.optim as optim
 from dataset import MPCNNDatasetFactory
 from evaluation import MPCNNEvaluatorFactory
-from model import MPCNN
+from models.mpcnn import MPCNN
 from train import MPCNNTrainerFactory
 from utils.serialization import load_checkpoint
 

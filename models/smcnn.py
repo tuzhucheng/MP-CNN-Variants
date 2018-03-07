@@ -23,12 +23,12 @@ class SMCNN(nn.Module):
 
         self.conv = nn.Sequential(
             nn.Conv1d(self.in_channels, n_filters, filter_width),
-            nn.Tanh()
+            nn.ReLU()
         )
 
         # compute number of inputs to first hidden layer
         EXT_FEATS = 4 if ext_feats else 0
-        n_feat = n_filters + EXT_FEATS
+        n_feat = 2*n_filters + EXT_FEATS
 
         self.final_layers = nn.Sequential(
             nn.Linear(n_feat, hidden_layer_units),
@@ -65,6 +65,7 @@ class SMCNN(nn.Module):
         xd = F.max_pool1d(xd, xd.size(2))
         combined_feats = [xq, xd, ext_feats] if self.ext_feats else [xq, xd]
         feat_all = torch.cat(combined_feats, dim=1)
+        feat_all = feat_all.view(-1, feat_all.size(1))
 
         preds = self.final_layers(feat_all)
         return preds

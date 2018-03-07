@@ -12,6 +12,7 @@ class SMCNN(nn.Module):
 
     def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention):
         super(SMCNN, self).__init__()
+        self.arch = 'smcnn'
         self.n_word_dim = n_word_dim
         self.n_filters = n_filters
         self.filter_width = filter_width

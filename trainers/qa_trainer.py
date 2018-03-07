@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from trainers.trainer import Trainer
+from utils.serialization import save_checkpoint
 
 
 class QATrainer(Trainer):
@@ -68,7 +69,7 @@ class QATrainer(Trainer):
 
             if dev_scores[0] > best_dev_score:
                 best_dev_score = dev_scores[0]
-                torch.save(self.model, self.model_outfile)
+                save_checkpoint(epoch, 'base', self.model.state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
 
             if abs(prev_loss - new_loss) <= 0.0002:
                 self.logger.info('Early stopping. Loss changed by less than 0.0002.')

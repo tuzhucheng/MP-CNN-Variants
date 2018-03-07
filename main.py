@@ -12,6 +12,20 @@ from dataset import MPCNNDatasetFactory
 from evaluation import MPCNNEvaluatorFactory
 from model import MPCNN
 from train import MPCNNTrainerFactory
+from utils.serialization import load_checkpoint
+
+
+def get_logger():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    return logger
 
 
 if __name__ == '__main__':
@@ -52,16 +66,7 @@ if __name__ == '__main__':
     if args.device != -1:
         torch.cuda.manual_seed(args.seed)
 
-    # logging setup
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.INFO)
-
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-
+    logger = get_logger()
     logger.info(pprint.pformat(vars(args)))
 
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
@@ -112,7 +117,8 @@ if __name__ == '__main__':
         logger.info('Total number of parameters: %s', total_params)
         trainer.train(args.epochs)
 
-    model = torch.load(args.model_outfile)
+    _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)
+    model.load_state_dict(state_dict)
     saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
     scores, metric_names = saved_model_evaluator.get_scores()
     logger.info('Evaluation metrics for test')

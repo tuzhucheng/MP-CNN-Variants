@@ -53,7 +53,7 @@ class MSRVIDEvaluator(Evaluator):
             with torch.cuda.device(self.device):
                 predict_classes = predict_classes.cuda()
 
-        predictions = (Variable(predict_classes) * batch_predictions).sum(dim=1)
+        predictions = (Variable(predict_classes) * batch_predictions.exp()).sum(dim=1)
         true_labels = (Variable(predict_classes) * batch_labels).sum(dim=1)
 
         return predictions, true_labels

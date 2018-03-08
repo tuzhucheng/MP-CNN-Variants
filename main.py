@@ -29,6 +29,14 @@ def get_logger():
     return logger
 
 
+def evaluate_dataset(split_name, dataset_cls, model, embedding, loader, batch_size, device):
+    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, loader, batch_size, device)
+    scores, metric_names = saved_model_evaluator.get_scores()
+    logger.info('Evaluation metrics for {}'.format(split_name))
+    logger.info('\t'.join([' '] + metric_names))
+    logger.info('\t'.join([split_name] + list(map(str, scores))))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch implementation of Multi-Perspective CNN')
     parser.add_argument('model_outfile', help='file to save final model')
@@ -125,11 +133,9 @@ if __name__ == '__main__':
 
     _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)
     model.load_state_dict(state_dict)
-    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
-    scores, metric_names = saved_model_evaluator.get_scores()
-    logger.info('Evaluation metrics for test')
-    logger.info('\t'.join([' '] + metric_names))
-    logger.info('\t'.join(['test'] + list(map(str, scores))))
+    if dev_loader:
+        evaluate_dataset('dev', dataset_cls, model, embedding, dev_loader, args.batch_size, args.device)
+    evaluate_dataset('test', dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
 
     if args.save_predictions:
         for dataset_name, loader in zip(('train', 'test', 'dev'), (train_loader, test_loader, dev_loader)):

@@ -39,7 +39,7 @@ def evaluate_dataset(split_name, dataset_cls, model, embedding, loader, batch_si
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch implementation of Multi-Perspective CNN')
     parser.add_argument('model_outfile', help='file to save final model')
-    parser.add_argument('--arch', help='model architecture to use', choices=['mpcnn', 'smcnn'], default='mpcnn')
+    parser.add_argument('--arch', help='model architecture to use', default='mpcnn')
     parser.add_argument('--dataset', help='dataset to use, one of [sick, msrvid, trecqa, wikiqa, sts]', default='sick')
     parser.add_argument('--word-vectors-dir', help='word vectors directory', default=os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'GloVe'))
     parser.add_argument('--word-vectors-file', help='word vectors filename', default='glove.840B.300d.txt')

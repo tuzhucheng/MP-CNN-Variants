@@ -48,7 +48,7 @@ class Hyperband(object):
                 n_i = n * self.eta**(-i)
                 r_i = int(r * self.eta**i)
 
-                self.logger.info('%s configurations, %s iterations each', n, r)
+                self.logger.info('%s configurations, %s iterations each', len(T), r_i)
 
                 result_set = []
 

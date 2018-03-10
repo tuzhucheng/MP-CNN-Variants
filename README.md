@@ -80,3 +80,7 @@ python main.py --help
 ## Dependencies
 
 The model is written in PyTorch. We optionally make use of https://github.com/lanpa/tensorboard-pytorch to connect to [TensorBoard](https://github.com/tensorflow/tensorboard) to visualize the training process. Just add `--tensorboard` to enable.
+
+## Experimental
+
+There are some scripts in this repo for hyperparameter optimization. I made a custom library for helping me to do this. However, this library is not yet in a shape to be open-sourced. Hence, the imports in `hyperparameter_tuning_{random,hyperband}.py` and `utils/hyperband.py` will not work for you at the moment.

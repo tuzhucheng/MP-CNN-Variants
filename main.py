@@ -10,10 +10,9 @@ import torch
 import torch.optim as optim
 from dataset import MPCNNDatasetFactory
 from evaluation import MPCNNEvaluatorFactory
-from models.mpcnn import MPCNN
-from models.smcnn import SMCNN
 from train import MPCNNTrainerFactory
 from utils.serialization import load_checkpoint
+from variants import VariantFactory
 
 
 def get_logger():
@@ -86,13 +85,7 @@ if __name__ == '__main__':
         with torch.cuda.device(args.device):
             embedding = embedding.cuda()
 
-    if args.arch == 'mpcnn':
-        filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-        model = MPCNN(args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
-                        args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
-    else:
-        model = SMCNN(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
-                      dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
+    model = VariantFactory.get_model(args, dataset_cls)
 
     if args.device != -1:
         with torch.cuda.device(args.device):

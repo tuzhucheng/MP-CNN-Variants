@@ -8,10 +8,10 @@ from trainers.trainer import Trainer
 from utils.serialization import save_checkpoint
 
 
-class SICKTrainer(Trainer):
+class STSTrainer(Trainer):
 
     def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(SICKTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+        super(STSTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
 
     def train_epoch(self, epoch):
         self.model.train()
@@ -36,7 +36,7 @@ class SICKTrainer(Trainer):
                 )
 
         if self.use_tensorboard:
-            self.writer.add_scalar('sick/train/kl_div_loss', total_loss, epoch)
+            self.writer.add_scalar('sts/train/kl_div_loss', total_loss, epoch)
 
         return total_loss
 
@@ -54,9 +54,9 @@ class SICKTrainer(Trainer):
             new_loss = dev_scores[2]
 
             if self.use_tensorboard:
-                self.writer.add_scalar('sick/lr', self.optimizer.param_groups[0]['lr'], epoch)
-                self.writer.add_scalar('sick/dev/pearson_r', dev_scores[0], epoch)
-                self.writer.add_scalar('sick/dev/kl_div_loss', new_loss, epoch)
+                self.writer.add_scalar('sts/lr', self.optimizer.param_groups[0]['lr'], epoch)
+                self.writer.add_scalar('sts/dev/pearson_r', dev_scores[0], epoch)
+                self.writer.add_scalar('sts/dev/kl_div_loss', new_loss, epoch)
 
             end = time.time()
             duration = end - start
@@ -67,8 +67,8 @@ class SICKTrainer(Trainer):
                 best_dev_score = dev_scores[0]
                 save_checkpoint(epoch, self.model.arch, self.model.state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
 
-            if abs(prev_loss - new_loss) <= 0.0002:
-                self.logger.info('Early stopping. Loss changed by less than 0.0002.')
+            if prev_loss < new_loss and prev_loss != 0:
+                self.logger.info('Early stopping.')
                 break
 
             prev_loss = new_loss

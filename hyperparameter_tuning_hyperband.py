@@ -12,7 +12,7 @@ device = 0
 
 def get_random_configuration():
     learning_rate = round(10 ** uniform(-4, -3), 5)
-    filters = choice([50, 100, 150, 300])
+    filters = choice([50])
     reg = round(10 ** uniform(-5, -3), 7)
     return {
         'lr': learning_rate,
@@ -20,7 +20,7 @@ def get_random_configuration():
         'reg': reg
     }
 
-def run_and_return_eval(num_iters, expt_group, dataset, log_interval, params):
+def run_and_return_eval(num_iters, expt_group, arch, dataset, log_interval, params):
     global device
     gpu = device % 2
     device += 1
@@ -40,9 +40,10 @@ def run_and_return_eval(num_iters, expt_group, dataset, log_interval, params):
     lr = params['lr']
     filters = params['filters']
     reg = params['reg']
+    max_window_size = params['max_window_size']
 
     model_name = f"lr_{lr}_f_{filters}_reg_{reg}_id_{randid}.castor"
-    command = f"python /u/z3tu/castorini/MP-CNN-Variants/main.py /u/z3tu/castorini/MP-CNN-Variants/saved_models/{model_name} --arch smcnn --dataset {dataset} --log-interval {log_interval} --epochs {num_iters} --device {gpu} --holistic-filters {filters} --batch-size 64 --lr {lr} --regularization {reg}"
+    command = f"python /u/z3tu/castorini/MP-CNN-Variants/main.py /u/z3tu/castorini/MP-CNN-Variants/saved_models/{model_name} --arch {arch} --dataset {dataset} --log-interval {log_interval} --epochs {num_iters} --device {gpu} --holistic-filters {filters} --max-window-size {max_window_size} --batch-size 64 --lr {lr} --regularization {reg}"
 
     print("Running: " + command)
     res_future = tasks.run_model.apply_async(args=[command.split(' '),
@@ -54,12 +55,15 @@ def run_and_return_eval(num_iters, expt_group, dataset, log_interval, params):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyper parameters sweeper')
     parser.add_argument('group', type=str, help='experiment group')
+    parser.add_argument('arch', type=str, help='model architecture')
     parser.add_argument('dataset', type=str, choices=['trecqa', 'wikiqa', 'sick', 'msrvid'], help='dataset')
     parser.add_argument('metric', type=str, choices=['map', 'pearson'], help='metric to optimize')
-    parser.add_argument('--max_iters', type=int, default=81, help='Hyperband Max Iters')
+    parser.add_argument('--max-iters', type=int, default=27, help='Hyperband Max Iters')
+    parser.add_argument('--max-window-size', type=int, default=5, help='Max Window Size')
     parser.add_argument('--eta', type=int, default=3, help='Hyperband Iters')
     parser.add_argument('--log-interval', type=int, default=1000, help='log interval')
     args = parser.parse_args()
 
-    hb = Hyperband(get_random_configuration, run_and_return_eval, args.max_iters, args.eta)
-    hb.run(args.group, args.dataset, args.metric, args.log_interval)
+    fixed_args = {'max_window_size': args.max_window_size}
+    hb = Hyperband(get_random_configuration, run_and_return_eval, fixed_args, args.max_iters, args.eta)
+    hb.run(args.group, args.arch, args.dataset, args.metric, args.log_interval)

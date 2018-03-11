@@ -13,9 +13,10 @@ import numpy as np
 
 class Hyperband(object):
 
-    def __init__(self, get_random_hyperparameter_configuration, run_then_return_eval, max_iter=81, eta=3):
+    def __init__(self, get_random_hyperparameter_configuration, run_then_return_eval, fixed_args, max_iter=81, eta=3):
         self.get_random_hyperparameter_configuration = get_random_hyperparameter_configuration
         self.run_then_return_eval = run_then_return_eval
+        self.fixed_args = fixed_args
         self.max_iter = max_iter  # max epochs per configuration
         self.eta = eta  # down-sampling rate
         # total number of unique executions of Successive Halving (minus 1), just log_{eta} (max_iter)
@@ -34,7 +35,7 @@ class Hyperband(object):
         logger.addHandler(ch)
         self.logger = logger
 
-    def run(self, expt_group, dataset, metric, log_interval):
+    def run(self, expt_group, arch, dataset, metric, log_interval):
         for s in reversed(range(self.s_max+1)):
             # initial number of configurations
             n = int(ceil(self.B / self.max_iter / (s+1) * (self.eta**s)))
@@ -43,6 +44,7 @@ class Hyperband(object):
 
             # Successive Halving with (n, r)
             T = [self.get_random_hyperparameter_configuration() for _ in range(n)]
+
             for i in range(s+1):
                 # Run each of the n_i configs for r_i iters and keep best n_i / eta
                 n_i = n * self.eta**(-i)
@@ -53,7 +55,9 @@ class Hyperband(object):
                 result_set = []
 
                 for t in T:
-                    async_res = self.run_then_return_eval(r_i, expt_group, dataset, log_interval, t)
+                    for k, v in self.fixed_args.items():
+                        t[k] = v
+                    async_res = self.run_then_return_eval(r_i, expt_group, arch, dataset, log_interval, t)
                     result_set.append(async_res)
 
                 result_set = ResultSet(result_set)

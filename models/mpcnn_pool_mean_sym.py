@@ -7,7 +7,7 @@ import torch.nn.functional as F
 class MPCNNPoolMeanSymmetrical(nn.Module):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNN, self).__init__()
+        super(MPCNNPoolMeanSymmetrical, self).__init__()
         self.arch = 'mpcnn_pool_mean_sym'
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
@@ -98,7 +98,7 @@ class MPCNNPoolMeanSymmetrical(nn.Module):
             per_dim_conv_out = self.per_dim_conv_layers[ws - 1](sent)
             block_b[ws] = {
                 'max': F.max_pool1d(per_dim_conv_out, per_dim_conv_out.size(2)).contiguous().view(-1, self.in_channels, self.n_per_dim_filters),
-                'min': F.max_pool1d(-1 * per_dim_conv_out, per_dim_conv_out.size(2)).contiguous().view(-1, self.in_channels, self.n_per_dim_filters)
+                'min': F.max_pool1d(-1 * per_dim_conv_out, per_dim_conv_out.size(2)).contiguous().view(-1, self.in_channels, self.n_per_dim_filters),
                 'mean': F.avg_pool1d(per_dim_conv_out, per_dim_conv_out.size(2)).contiguous().view(-1, self.in_channels, self.n_per_dim_filters)
             }
         return block_a, block_b

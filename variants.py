@@ -7,7 +7,7 @@ from models.smcnn_multi_window import SMCNNMultiWindow
 from models.mpcnn_pool_max_only import MPCNNPoolMaxOnly
 from models.mpcnn_pool_mean_sym import MPCNNPoolMeanSymmetrical
 from models.mpcnn_pool_no_mean_sym import MPCNNPoolNoMeanSymmetrical
-from models.mpcnn_comp_horiz_only import MPCNNCompCompHorizOnly
+from models.mpcnn_comp_horiz_only import MPCNNCompHorizOnly
 from models.mpcnn_comp_vert_only import MPCNNCompVertOnly
 from models.mpcnn_comp_unit1_only import MPCNNCompUnit1Only
 from models.mpcnn_comp_unit2_only import MPCNNCompUnit2Only
@@ -25,7 +25,7 @@ class VariantFactory(object):
                 'mpcnn_pool_max_only': MPCNNPoolMaxOnly,
                 'mpcnn_pool_mean_sym': MPCNNPoolMeanSymmetrical,
                 'mpcnn_pool_no_mean_sym': MPCNNPoolNoMeanSymmetrical,
-                'mpcnn_comp_horiz_only': MPCNNCompCompHorizOnly,
+                'mpcnn_comp_horiz_only': MPCNNCompHorizOnly,
                 'mpcnn_comp_vert_only': MPCNNCompVertOnly,
                 'mpcnn_comp_unit1_only': MPCNNCompUnit1Only,
                 'mpcnn_comp_unit2_only': MPCNNCompUnit2Only

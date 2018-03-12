@@ -9,6 +9,7 @@ from models.mpcnn_pool_mean_sym import MPCNNPoolMeanSymmetrical
 from models.mpcnn_pool_no_mean_sym import MPCNNPoolNoMeanSymmetrical
 from models.mpcnn_comp_horiz_only import MPCNNCompCompHorizOnly
 from models.mpcnn_comp_vert_only import MPCNNCompVertOnly
+from models.mpcnn_comp_unit1_only import MPCNNCompUnit1Only
 
 import numpy as np
 
@@ -24,7 +25,8 @@ class VariantFactory(object):
                 'mpcnn_pool_mean_sym': MPCNNPoolMeanSymmetrical,
                 'mpcnn_pool_no_mean_sym': MPCNNPoolNoMeanSymmetrical,
                 'mpcnn_comp_horiz_only': MPCNNCompCompHorizOnly,
-                'mpcnn_comp_vert_only': MPCNNCompVertOnly
+                'mpcnn_comp_vert_only': MPCNNCompVertOnly,
+                'mpcnn_comp_unit1_only': MPCNNCompUnit1Only
             }
 
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]

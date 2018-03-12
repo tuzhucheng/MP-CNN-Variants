@@ -1,4 +1,4 @@
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 import torch
 from torch.autograd import Variable
 import torch.nn.functional as F
@@ -6,10 +6,10 @@ import torch.nn.functional as F
 from evaluators.evaluator import Evaluator
 
 
-class MSRVIDEvaluator(Evaluator):
+class STSEvaluator(Evaluator):
 
     def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device):
-        super(MSRVIDEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device)
+        super(STSEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device)
 
     def get_scores(self):
         self.model.eval()
@@ -43,8 +43,9 @@ class MSRVIDEvaluator(Evaluator):
         true_labels = torch.cat(true_labels).cpu().numpy()
         test_kl_div_loss /= len(batch.dataset.examples)
         pearson_r = pearsonr(predictions, true_labels)[0]
+        spearman_r = spearmanr(predictions, true_labels)[0]
 
-        return [pearson_r, test_kl_div_loss], ['pearson_r', 'KL-divergence loss']
+        return [pearson_r, spearman_r, test_kl_div_loss], ['pearson_r', 'spearman_r', 'KL-divergence loss']
 
     def get_final_prediction_and_label(self, batch_predictions, batch_labels):
         num_classes = self.dataset_cls.NUM_CLASSES
@@ -53,7 +54,7 @@ class MSRVIDEvaluator(Evaluator):
             with torch.cuda.device(self.device):
                 predict_classes = predict_classes.cuda()
 
-        predictions = (Variable(predict_classes) * batch_predictions.exp()).sum(dim=1)
+        predictions = (Variable(predict_classes) * batch_predictions).sum(dim=1)
         true_labels = (Variable(predict_classes) * batch_labels).sum(dim=1)
 
         return predictions, true_labels

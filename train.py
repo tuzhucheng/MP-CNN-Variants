@@ -2,6 +2,7 @@ from trainers.sick_trainer import SICKTrainer
 from trainers.msrvid_trainer import MSRVIDTrainer
 from trainers.trecqa_trainer import TRECQATrainer
 from trainers.wikiqa_trainer import WikiQATrainer
+from trainers.sts_trainer import STSTrainer
 
 
 class MPCNNTrainerFactory(object):
@@ -12,7 +13,8 @@ class MPCNNTrainerFactory(object):
         'sick': SICKTrainer,
         'msrvid': MSRVIDTrainer,
         'trecqa': TRECQATrainer,
-        'wikiqa': WikiQATrainer
+        'wikiqa': WikiQATrainer,
+        'sts': STSTrainer
     }
 
     @staticmethod

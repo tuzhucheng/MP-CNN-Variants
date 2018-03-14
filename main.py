@@ -58,7 +58,7 @@ if __name__ == '__main__':
     parser.add_argument('--epsilon', type=float, default=1e-8, help='Optimizer epsilon (default: 1e-8)')
     parser.add_argument('--log-interval', type=int, default=10, help='how many batches to wait before logging training status (default: 10)')
     parser.add_argument('--regularization', type=float, default=0.0001, help='Regularization for the optimizer (default: 0.0001)')
-    parser.add_argument('--max-window-size', type=int, default=3, help='windows sizes will be [1,max_window_size] and infinity (default: 300)')
+    parser.add_argument('--max-window-size', type=int, default=3, help='windows sizes will be [1,max_window_size] and infinity (default: 3)')
     parser.add_argument('--holistic-filters', type=int, default=300, help='number of holistic filters (default: 300)')
     parser.add_argument('--per-dim-filters', type=int, default=20, help='number of per-dimension filters (default: 20)')
     parser.add_argument('--hidden-units', type=int, default=150, help='number of hidden units in each of the two hidden layers (default: 150)')

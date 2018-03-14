@@ -4,6 +4,7 @@ Factory for returning different kinds of model variants.
 from models.mpcnn import MPCNN
 from models.smcnn import SMCNN
 from models.smcnn_multi_window import SMCNNMultiWindow
+from models.mpcnn_holistic_only import MPCNNHolisticOnly
 from models.mpcnn_pool_max_only import MPCNNPoolMaxOnly
 from models.mpcnn_pool_mean_sym import MPCNNPoolMeanSymmetrical
 from models.mpcnn_pool_no_mean_sym import MPCNNPoolNoMeanSymmetrical
@@ -22,6 +23,7 @@ class VariantFactory(object):
         if args.arch.startswith('mpcnn'):
             model_map = {
                 'mpcnn': MPCNN,
+                'mpcnn_holistic_only': MPCNNHolisticOnly,
                 'mpcnn_pool_max_only': MPCNNPoolMaxOnly,
                 'mpcnn_pool_mean_sym': MPCNNPoolMeanSymmetrical,
                 'mpcnn_pool_no_mean_sym': MPCNNPoolNoMeanSymmetrical,

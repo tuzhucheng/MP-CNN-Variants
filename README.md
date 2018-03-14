@@ -2,9 +2,6 @@
 
 This is a PyTorch implementation of MP-CNN as a base model with modifications and additions such as attention and sparse features.
 
-Note, the `master` version of the code current does not implement attention after the torchtext refactoring.
-If you are looking for an implementation with attention, checkout [Release v1.0](https://github.com/tuzhucheng/MP-CNN-Variants/releases/tag/v1.0).
-
 Here is the MP-CNN paper:
 
 * Hua He, Kevin Gimpel, and Jimmy Lin. [Multi-Perspective Sentence Similarity Modeling with Convolutional Neural Networks](http://aclweb.org/anthology/D/D15/D15-1181.pdf). *Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP 2015)*, pages 1576-1586.
@@ -83,3 +80,7 @@ python main.py --help
 ## Dependencies
 
 The model is written in PyTorch. We optionally make use of https://github.com/lanpa/tensorboard-pytorch to connect to [TensorBoard](https://github.com/tensorflow/tensorboard) to visualize the training process. Just add `--tensorboard` to enable.
+
+## Experimental
+
+There are some scripts in this repo for hyperparameter optimization. I made a custom library for helping me to do this. However, this library is not yet in a shape to be open-sourced. Hence, the imports in `hyperparameter_tuning_{random,hyperband}.py` and `utils/hyperband.py` will not work for you at the moment.

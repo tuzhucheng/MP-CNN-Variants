@@ -13,6 +13,8 @@ from models.mpcnn_comp_vert_only import MPCNNCompVertOnly
 from models.mpcnn_comp_unit1_only import MPCNNCompUnit1Only
 from models.mpcnn_comp_unit2_only import MPCNNCompUnit2Only
 from models.mpcnn_holistic_pool_max_only import MPCNNHolisticPoolMaxOnly
+from models.mpcnn_single_window import MPCNNSingleWindow
+from models.mpcnn_single_window_with_inf import MPCNNSingleWindowWithInf
 
 import numpy as np
 
@@ -32,7 +34,9 @@ class VariantFactory(object):
                 'mpcnn_comp_vert_only': MPCNNCompVertOnly,
                 'mpcnn_comp_unit1_only': MPCNNCompUnit1Only,
                 'mpcnn_comp_unit2_only': MPCNNCompUnit2Only,
-                'mpcnn_holistic_pool_max_only': MPCNNHolisticPoolMaxOnly
+                'mpcnn_holistic_pool_max_only': MPCNNHolisticPoolMaxOnly,
+                'mpcnn_single_window': MPCNNSingleWindow,
+                'mpcnn_single_window_with_inf': MPCNNSingleWindowWithInf
             }
 
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]

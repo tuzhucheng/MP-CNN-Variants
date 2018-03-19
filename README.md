@@ -72,6 +72,18 @@ The paper results are reported in [Noise-Contrastive Estimation for Answer Selec
 
 These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
 
+## MSRP Dataset
+
+To run MP-CNN on the MSRP dataset, use the following command:
+
+```
+python main.py mpcnn.msrp.model --dataset msrp --epochs 15
+```
+
+Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
+
+You should be able to obtain accuracy to be 0.7629 and f1 score to be 0.8289.
+
 To see all options available, use
 ```
 python main.py --help

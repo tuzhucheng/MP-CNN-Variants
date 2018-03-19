@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 
 from datasets.sick import SICK
+from datasets.msrp import MSRP
 from datasets.msrvid import MSRVID
 from datasets.trecqa import TRECQA
 from datasets.wikiqa import WikiQA
@@ -46,6 +47,13 @@ class MPCNNDatasetFactory(object):
             embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
             embedding.weight = nn.Parameter(STS.TEXT_FIELD.vocab.vectors)
             return STS, embedding, train_loader, test_loader, dev_loader
+        elif dataset_name == 'msrp':
+            dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'msrp/')
+            train_loader, dev_loader, test_loader = MSRP.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
+            embedding_dim = MSRP.TEXT_FIELD.vocab.vectors.size()
+            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
+            embedding.weight = nn.Parameter(MSRP.TEXT_FIELD.vocab.vectors)
+            return MSRP, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrvid':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'msrvid/')
             dev_loader = None

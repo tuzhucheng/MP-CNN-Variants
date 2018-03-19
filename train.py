@@ -1,4 +1,5 @@
 from trainers.sick_trainer import SICKTrainer
+from trainers.msrp_trainer import MSRPTrainer
 from trainers.msrvid_trainer import MSRVIDTrainer
 from trainers.trecqa_trainer import TRECQATrainer
 from trainers.wikiqa_trainer import WikiQATrainer
@@ -11,6 +12,7 @@ class MPCNNTrainerFactory(object):
     """
     trainer_map = {
         'sick': SICKTrainer,
+        'msrp': MSRPTrainer,
         'msrvid': MSRVIDTrainer,
         'trecqa': TRECQATrainer,
         'wikiqa': WikiQATrainer,

@@ -4,6 +4,7 @@ Factory for returning different kinds of model variants.
 from models.mpcnn import MPCNN
 from models.smcnn import SMCNN
 from models.smcnn_multi_window import SMCNNMultiWindow
+from models.smcnn_with_comp import SMCNNWithComp
 from models.mpcnn_holistic_only import MPCNNHolisticOnly
 from models.mpcnn_pool_max_only import MPCNNPoolMaxOnly
 from models.mpcnn_pool_mean_sym import MPCNNPoolMeanSymmetrical
@@ -47,6 +48,9 @@ class VariantFactory(object):
                           args.attention)
         elif args.arch == 'smcnn':
             model = SMCNN(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
+                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
+        elif args.arch == 'smcnn_with_comp':
+            model = SMCNNWithComp(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
                           dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
         elif args.arch == 'smcnn_multi_window':
             filter_widths = list(range(1, args.max_window_size + 1))

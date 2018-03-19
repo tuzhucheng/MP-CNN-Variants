@@ -1,4 +1,5 @@
 from evaluators.sick_evaluator import SICKEvaluator
+from evaluators.msrp_evaluator import MSRPEvaluator
 from evaluators.msrvid_evaluator import MSRVIDEvaluator
 from evaluators.trecqa_evaluator import TRECQAEvaluator
 from evaluators.wikiqa_evaluator import WikiQAEvaluator
@@ -11,6 +12,7 @@ class MPCNNEvaluatorFactory(object):
     """
     evaluator_map = {
         'sick': SICKEvaluator,
+        'msrp': MSRPEvaluator,
         'msrvid': MSRVIDEvaluator,
         'trecqa': TRECQAEvaluator,
         'wikiqa': WikiQAEvaluator,

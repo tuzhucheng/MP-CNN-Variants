@@ -33,6 +33,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
 
         word_to_doc_cnt = get_pairwise_word_to_doc_freq(sent_list_1, sent_list_2)
         overlap_feats = get_pairwise_overlap_features(sent_list_1, sent_list_2, word_to_doc_cnt)
+        self.word_to_doc_cnt = word_to_doc_cnt
 
         with open(os.path.join(path, 'id.txt'), 'r') as id_file, open(os.path.join(path, 'sim.txt'), 'r') as label_file:
             for pair_id, l1, l2, ext_feats, label in zip(id_file, sent_list_1, sent_list_2, overlap_feats, label_file):

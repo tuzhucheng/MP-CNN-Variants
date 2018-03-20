@@ -50,7 +50,7 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
             nn.LogSoftmax(1)
         )
 
-    def concat_attention(self, sent1, sent2):
+    def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         sent1_transposed = sent1.transpose(1, 2)
         attention_dot = torch.bmm(sent1_transposed, sent2)
         sent1_norms = torch.norm(sent1_transposed, p=2, dim=2, keepdim=True)
@@ -60,6 +60,10 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
 
         attention_weight_vec1 = F.softmax(attention_matrix.sum(2), 1)
         attention_weight_vec2 = F.softmax(attention_matrix.sum(1), 1)
+
+        if self.attention == 'idf' and word_to_doc_count is not None:
+            raise NotImplementedError('IDF Attention not yet implemented')
+
         attention_weighted_sent1 = attention_weight_vec1.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent1
         attention_weighted_sent2 = attention_weight_vec2.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent2
         attention_emb1 = torch.cat((attention_weighted_sent1, sent1), dim=1)
@@ -110,10 +114,10 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
 
         return torch.cat(comparison_feats, dim=1)
 
-    def forward(self, sent1, sent2, ext_feats=None):
+    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         # Attention
         if self.attention:
-            sent1, sent2 = self.concat_attention(sent1, sent2)
+            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
 
         # Sentence modeling module
         sent1_block_a = self._get_blocks_for_sentence(sent1)

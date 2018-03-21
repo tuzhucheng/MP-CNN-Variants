@@ -6,27 +6,23 @@ import torch.nn.functional as F
 from models.mpcnn_variant_base import MPCNNVariantBase
 
 
-class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
+class MPCNNLiteMultichannel(MPCNNVariantBase):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNNNoPerDimNoMultiPooling, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
-        self.arch = 'mpcnn_no_per_dim_no_multi_pooling'  # aka MP-CNN Lite
+        super(MPCNNLiteMultichannel, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, 'none')  # No attention
+        self.arch = 'mpcnn_lite_multichannel'  # aka MP-CNN Lite
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
-        self.n_per_dim_filters = n_per_dim_filters
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
-        self.attention = attention
         holistic_conv_layers = []
-
-        self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
         for ws in filter_widths:
             if np.isinf(ws):
                 continue
 
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, n_holistic_filters, ws),
+                nn.Conv2d(1, n_holistic_filters, (n_word_dim, ws)),
                 nn.Tanh()
             ))
 
@@ -97,9 +93,9 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
         return torch.cat(comparison_feats, dim=1)
 
     def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
-        # Attention
-        if self.attention != 'none':
-            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
+        # Adapt to 2D Conv
+        sent1 = torch.unsqueeze(sent1, dim=1)
+        sent2 = torch.unsqueeze(sent2, dim=1)
 
         # Sentence modeling module
         sent1_block_a = self._get_blocks_for_sentence(sent1)

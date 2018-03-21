@@ -36,7 +36,7 @@ class MSRPEvaluator(Evaluator):
         accuracy = accuracy_score(true_labels, predictions)
         f1 = f1_score(true_labels, predictions)
 
-        return [accuracy, f1, test_kl_div_loss], ['accuracy', 'f1', 'KL-divergence loss']
+        return [accuracy, f1, test_kl_div_loss], ['accuracy', 'f1', 'kl_div']
 
     def get_final_prediction_and_label(self, batch_predictions, batch_labels):
         predictions = batch_predictions.exp()[:, 1]

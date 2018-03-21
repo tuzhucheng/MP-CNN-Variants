@@ -1,17 +1,18 @@
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from models.smcnn_variant_base import SMCNNVariantBase
 
-class SMCNNWithComp(nn.Module):
+
+class SMCNNWithComp(SMCNNVariantBase):
 
     """
     SM model but with comparison. Note this uses Tanh for comparison with MP-CNN variants.
     """
 
     def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(SMCNNWithComp, self).__init__()
+        super(SMCNNWithComp, self).__init__(n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention)
 
         self.arch = 'smcnn_with_comp'
         self.n_word_dim = n_word_dim
@@ -20,7 +21,7 @@ class SMCNNWithComp(nn.Module):
         self.ext_feats = ext_feats
         self.attention = attention
 
-        self.in_channels = n_word_dim if not attention else 2*n_word_dim
+        self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
         self.conv = nn.Sequential(
             nn.Conv1d(self.in_channels, n_filters, filter_width),
@@ -44,22 +45,6 @@ class SMCNNWithComp(nn.Module):
             nn.Linear(hidden_layer_units, num_classes),
             nn.LogSoftmax(1)
         )
-
-    def concat_attention(self, sent1, sent2):
-        sent1_transposed = sent1.transpose(1, 2)
-        attention_dot = torch.bmm(sent1_transposed, sent2)
-        sent1_norms = torch.norm(sent1_transposed, p=2, dim=2, keepdim=True)
-        sent2_norms = torch.norm(sent2, p=2, dim=1, keepdim=True)
-        attention_norms = torch.bmm(sent1_norms, sent2_norms)
-        attention_matrix = attention_dot / attention_norms
-
-        attention_weight_vec1 = F.softmax(attention_matrix.sum(2), 1)
-        attention_weight_vec2 = F.softmax(attention_matrix.sum(1), 1)
-        attention_weighted_sent1 = attention_weight_vec1.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent1
-        attention_weighted_sent2 = attention_weight_vec2.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent2
-        attention_emb1 = torch.cat((attention_weighted_sent1, sent1), dim=1)
-        attention_emb2 = torch.cat((attention_weighted_sent2, sent2), dim=1)
-        return attention_emb1, attention_emb2
 
     def _get_blocks_for_sentence(self, sent):
         block_a = {}
@@ -90,10 +75,10 @@ class SMCNNWithComp(nn.Module):
 
         return torch.cat(comparison_feats, dim=1)
 
-    def forward(self, sent1, sent2, ext_feats=None):
+    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         # Attention
-        if self.attention:
-            sent1, sent2 = self.concat_attention(sent1, sent2)
+        if self.attention != 'none':
+            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
 
         # Sentence modeling module
         sent1_block_a = self._get_blocks_for_sentence(sent1)

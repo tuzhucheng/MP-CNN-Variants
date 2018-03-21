@@ -1,23 +1,26 @@
 """
 SM Model with multiple window sizes
 """
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-class SMCNNMultiWindow(nn.Module):
+from models.smcnn_variant_base import SMCNNVariantBase
 
-    def __init__(self, n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats):
-        super(SMCNNMultiWindow, self).__init__()
+
+class SMCNNMultiWindow(SMCNNVariantBase):
+
+    def __init__(self, n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
+        super(SMCNNMultiWindow, self).__init__(n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
         self.arch = 'smcnn_multi_window'
         self.n_word_dim = n_word_dim
         self.n_filters = n_filters
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
+        self.attention = attention
 
-        self.in_channels = n_word_dim
+        self.in_channels = n_word_dim if attention == 'none' else 2 * n_word_dim
 
         conv_layers = []
         for ws in filter_widths:
@@ -49,7 +52,11 @@ class SMCNNMultiWindow(nn.Module):
 
         return torch.cat(combined, dim=1)
 
-    def forward(self, sent1, sent2, ext_feats=None):
+    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
+        # Attention
+        if self.attention != 'none':
+            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
+
         xq = self.convolve(sent1)
         xd = self.convolve(sent2)
 

@@ -55,7 +55,7 @@ class VariantFactory(object):
         elif args.arch == 'smcnn_multi_window':
             filter_widths = list(range(1, args.max_window_size + 1))
             model = SMCNNMultiWindow(args.word_vectors_dim, args.holistic_filters, filter_widths, args.hidden_units,
-                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features)
+                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
         else:
             raise ValueError('Unrecognized model variant')
 

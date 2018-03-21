@@ -3,11 +3,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from models.mpcnn_variant_base import MPCNNVariantBase
 
-class MPCNNNoPerDimNoMultiPooling(nn.Module):
+
+class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNNNoPerDimNoMultiPooling, self).__init__()
+        super(MPCNNNoPerDimNoMultiPooling, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
         self.arch = 'mpcnn_no_per_dim_no_multi_pooling'
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
@@ -49,32 +51,6 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
             nn.Linear(hidden_layer_units, num_classes),
             nn.LogSoftmax(1)
         )
-
-    def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
-        sent1_transposed = sent1.transpose(1, 2)
-        attention_dot = torch.bmm(sent1_transposed, sent2)
-        sent1_norms = torch.norm(sent1_transposed, p=2, dim=2, keepdim=True)
-        sent2_norms = torch.norm(sent2, p=2, dim=1, keepdim=True)
-        attention_norms = torch.bmm(sent1_norms, sent2_norms)
-        attention_matrix = attention_dot / attention_norms
-
-        attention_weight_vec1 = F.softmax(attention_matrix.sum(2), 1)
-        attention_weight_vec2 = F.softmax(attention_matrix.sum(1), 1)
-
-        if self.attention == 'idf' and word_to_doc_count is not None:
-            for i, sent in enumerate(raw_sent1):
-                for j, word in enumerate(sent.split(' ')):
-                    attention_weight_vec1[i, j] /= word_to_doc_count.get(word, 1)
-
-            for i, sent in enumerate(raw_sent2):
-                for j, word in enumerate(sent.split(' ')):
-                    attention_weight_vec2[i, j] /= word_to_doc_count.get(word, 1)
-
-        attention_weighted_sent1 = attention_weight_vec1.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent1
-        attention_weighted_sent2 = attention_weight_vec2.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent2
-        attention_emb1 = torch.cat((attention_weighted_sent1, sent1), dim=1)
-        attention_emb2 = torch.cat((attention_weighted_sent2, sent2), dim=1)
-        return attention_emb1, attention_emb2
 
     def _get_blocks_for_sentence(self, sent):
         block_a = {}

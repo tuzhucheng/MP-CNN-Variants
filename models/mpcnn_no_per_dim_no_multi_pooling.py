@@ -17,7 +17,7 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
         self.attention = attention
         holistic_conv_layers = []
 
-        self.in_channels = n_word_dim if not attention else 2*n_word_dim
+        self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
         for ws in filter_widths:
             if np.isinf(ws):
@@ -62,7 +62,13 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
         attention_weight_vec2 = F.softmax(attention_matrix.sum(1), 1)
 
         if self.attention == 'idf' and word_to_doc_count is not None:
-            raise NotImplementedError('IDF Attention not yet implemented')
+            for i, sent in enumerate(raw_sent1):
+                for j, word in enumerate(sent.split(' ')):
+                    attention_weight_vec1[i, j] /= word_to_doc_count.get(word, 1)
+
+            for i, sent in enumerate(raw_sent2):
+                for j, word in enumerate(sent.split(' ')):
+                    attention_weight_vec2[i, j] /= word_to_doc_count.get(word, 1)
 
         attention_weighted_sent1 = attention_weight_vec1.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent1
         attention_weighted_sent2 = attention_weight_vec2.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent2
@@ -116,7 +122,7 @@ class MPCNNNoPerDimNoMultiPooling(nn.Module):
 
     def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         # Attention
-        if self.attention:
+        if self.attention != 'none':
             sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
 
         # Sentence modeling module

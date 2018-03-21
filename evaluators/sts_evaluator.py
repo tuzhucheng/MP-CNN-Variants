@@ -24,7 +24,7 @@ class STSEvaluator(Evaluator):
             sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
             sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
 
-            output = self.model(sent1, sent2, batch.ext_feats)
+            output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw)
             test_kl_div_loss += F.kl_div(output, batch.label, size_average=False).data[0]
             # handle last batch which might have smaller size
             if len(predict_classes) != len(batch.sentence_1):

@@ -52,15 +52,14 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         block_a = {}
         for ws in self.filter_widths:
             if np.isinf(ws):
-                sent_flattened, sent_flattened_size = sent.contiguous().view(sent.size(0), 1, -1), sent.size(1) * sent.size(2)
                 block_a[ws] = {
-                    'max': F.max_pool1d(sent_flattened, sent_flattened_size).view(sent.size(0), -1)
+                    'max': F.max_pool2d(sent, (sent.size(2), sent.size(3))).view(sent.size(0), -1)
                 }
                 continue
 
             holistic_conv_out = self.holistic_conv_layers[ws - 1](sent)
             block_a[ws] = {
-                'max': F.max_pool1d(holistic_conv_out, holistic_conv_out.size(2)).contiguous().view(-1, self.n_holistic_filters)
+                'max': F.max_pool2d(holistic_conv_out, (1, holistic_conv_out.size(3))).contiguous().view(-1, self.n_holistic_filters)
             }
 
         return block_a

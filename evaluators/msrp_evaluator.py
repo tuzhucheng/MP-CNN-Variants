@@ -1,7 +1,5 @@
-from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import accuracy_score, f1_score
 import torch
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 from evaluators.evaluator import Evaluator

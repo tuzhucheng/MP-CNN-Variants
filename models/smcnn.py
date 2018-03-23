@@ -10,19 +10,22 @@ from models.smcnn_variant_base import SMCNNVariantBase
 
 class SMCNN(SMCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(SMCNN, self).__init__(n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(SMCNN, self).__init__(n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
         self.arch = 'smcnn'
         self.n_word_dim = n_word_dim
         self.n_filters = n_filters
         self.filter_width = filter_width
         self.ext_feats = ext_feats
         self.attention = attention
+        self.wide_conv = wide_conv
 
         self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
+        padding = filter_width - 1 if wide_conv else 0
+
         self.conv = nn.Sequential(
-            nn.Conv1d(self.in_channels, n_filters, filter_width),
+            nn.Conv1d(self.in_channels, n_filters, filter_width, padding=padding),
             nn.ReLU()
         )
 

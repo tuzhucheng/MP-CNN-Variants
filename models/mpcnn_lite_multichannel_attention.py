@@ -9,14 +9,15 @@ from models.mpcnn_variant_base import MPCNNVariantBase
 
 class MPCNNLiteMultiChannelAttention(MPCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNNLiteMultiChannelAttention, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(MPCNNLiteMultiChannelAttention, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
         self.arch = 'mpcnn_lite_multichannel_attention'
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
         self.attention = attention
+        # TODO support wide conv
         holistic_conv_layers = []
 
         for ws in filter_widths:

@@ -11,8 +11,8 @@ class SMCNNWithComp(SMCNNVariantBase):
     SM model but with comparison. Note this uses Tanh for comparison with MP-CNN variants.
     """
 
-    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(SMCNNWithComp, self).__init__(n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(SMCNNWithComp, self).__init__(n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
 
         self.arch = 'smcnn_with_comp'
         self.n_word_dim = n_word_dim
@@ -20,11 +20,14 @@ class SMCNNWithComp(SMCNNVariantBase):
         self.filter_width = filter_width
         self.ext_feats = ext_feats
         self.attention = attention
+        self.wide_conv = wide_conv
 
         self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
+        padding = filter_width - 1 if wide_conv else 0
+
         self.conv = nn.Sequential(
-            nn.Conv1d(self.in_channels, n_filters, filter_width),
+            nn.Conv1d(self.in_channels, n_filters, filter_width, padding=padding),
             nn.ReLU()
         )
 

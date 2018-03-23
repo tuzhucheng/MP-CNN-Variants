@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 class SMCNNVariantBase(nn.Module):
 
-    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention):
+    def __init__(self, n_word_dim, n_filters, filter_width, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
         super(SMCNNVariantBase, self).__init__()
 
     def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):

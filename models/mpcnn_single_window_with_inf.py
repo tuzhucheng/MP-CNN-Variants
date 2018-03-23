@@ -8,8 +8,8 @@ from models.mpcnn_variant_base import MPCNNVariantBase
 
 class MPCNNSingleWindowWithInf(MPCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNNSingleWindowWithInf, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(MPCNNSingleWindowWithInf, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
 
         filter_widths = filter_widths[-2:]
 
@@ -20,16 +20,19 @@ class MPCNNSingleWindowWithInf(MPCNNVariantBase):
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
         self.attention = attention
+        self.wide_conv = wide_conv
 
         self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
+        padding = filter_widths[0] - 1 if wide_conv else 0
+
         self.holistic_conv_layer = nn.Sequential(
-            nn.Conv1d(self.in_channels, n_holistic_filters, filter_widths[0]),
+            nn.Conv1d(self.in_channels, n_holistic_filters, filter_widths[0], padding=padding),
             nn.Tanh()
         )
 
         self.per_dim_conv_layer = nn.Sequential(
-            nn.Conv1d(self.in_channels, self.in_channels * n_per_dim_filters, filter_widths[0], groups=self.in_channels),
+            nn.Conv1d(self.in_channels, self.in_channels * n_per_dim_filters, filter_widths[0], padding=padding, groups=self.in_channels),
             nn.Tanh()
         )
 

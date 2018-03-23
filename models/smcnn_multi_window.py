@@ -11,21 +11,23 @@ from models.smcnn_variant_base import SMCNNVariantBase
 
 class SMCNNMultiWindow(SMCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(SMCNNMultiWindow, self).__init__(n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(SMCNNMultiWindow, self).__init__(n_word_dim, n_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
         self.arch = 'smcnn_multi_window'
         self.n_word_dim = n_word_dim
         self.n_filters = n_filters
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
         self.attention = attention
+        self.wide_conv = wide_conv
 
         self.in_channels = n_word_dim if attention == 'none' else 2 * n_word_dim
 
         conv_layers = []
         for ws in filter_widths:
+            padding = ws - 1 if wide_conv else 0
             conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, n_filters, ws),
+                nn.Conv1d(self.in_channels, n_filters, ws, padding=padding),
                 nn.ReLU()
             ))
 

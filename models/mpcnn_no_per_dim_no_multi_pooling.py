@@ -8,8 +8,8 @@ from models.mpcnn_variant_base import MPCNNVariantBase
 
 class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention):
-        super(MPCNNNoPerDimNoMultiPooling, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention)
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+        super(MPCNNNoPerDimNoMultiPooling, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
         self.arch = 'mpcnn_no_per_dim_no_multi_pooling'  # aka MP-CNN Lite
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
@@ -17,6 +17,7 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
         self.attention = attention
+        self.wide_conv = wide_conv
         holistic_conv_layers = []
 
         self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
@@ -25,8 +26,10 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
             if np.isinf(ws):
                 continue
 
+            padding = ws - 1 if wide_conv else 0
+
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, n_holistic_filters, ws),
+                nn.Conv1d(self.in_channels, n_holistic_filters, ws, padding=padding),
                 nn.Tanh()
             ))
 

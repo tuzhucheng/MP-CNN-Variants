@@ -46,6 +46,7 @@ if __name__ == '__main__':
     parser.add_argument('--word-vectors-dim', type=int, default=300, help='number of dimensions of word vectors (default: 300)')
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--device', type=int, default=0, help='GPU device, -1 for CPU (default: 0)')
+    parser.add_argument('--wide-conv', action='store_true', default=False, help='use wide convolution instead of narrow convolution')
     parser.add_argument('--attention', choices=['none', 'basic', 'idf', 'modified_euclidean'], default='none', help='type of attention to use')
     parser.add_argument('--sparse-features', action='store_true', default=False, help='use sparse features (default: false)')
     parser.add_argument('--batch-size', type=int, default=64, help='input batch size for training (default: 64)')

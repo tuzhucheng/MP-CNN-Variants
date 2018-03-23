@@ -51,17 +51,17 @@ class VariantFactory(object):
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
             model = model_map[args.arch](args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
                           args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features,
-                          args.attention)
+                          args.attention, args.wide_conv)
         elif args.arch == 'smcnn':
             model = SMCNN(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
-                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
+                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention, args.wide_conv)
         elif args.arch == 'smcnn_with_comp':
             model = SMCNNWithComp(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
-                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
+                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention, args.wide_conv)
         elif args.arch == 'smcnn_multi_window':
             filter_widths = list(range(1, args.max_window_size + 1))
             model = SMCNNMultiWindow(args.word_vectors_dim, args.holistic_filters, filter_widths, args.hidden_units,
-                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention)
+                          dataset_cls.NUM_CLASSES, args.dropout, args.sparse_features, args.attention, args.wide_conv)
         else:
             raise ValueError('Unrecognized model variant')
 

@@ -20,6 +20,7 @@ from models.mpcnn_single_window_with_inf import MPCNNSingleWindowWithInf
 from models.mpcnn_no_per_dim_no_multi_pooling import MPCNNNoPerDimNoMultiPooling
 from models.mpcnn_lite_multichannel import MPCNNLiteMultichannel
 from models.mpcnn_lite_multichannel_attention import MPCNNLiteMultiChannelAttention
+from models.mpcnn_independent_filters import MPCNNIndependentFilters
 
 import numpy as np
 
@@ -45,7 +46,8 @@ class VariantFactory(object):
                 'mpcnn_single_window_with_inf': MPCNNSingleWindowWithInf,
                 'mpcnn_no_per_dim_no_multi_pooling': MPCNNNoPerDimNoMultiPooling,
                 'mpcnn_lite_multichannel': MPCNNLiteMultichannel,
-                'mpcnn_lite_multichannel_attention': MPCNNLiteMultiChannelAttention
+                'mpcnn_lite_multichannel_attention': MPCNNLiteMultiChannelAttention,
+                'mpcnn_independent_filters': MPCNNIndependentFilters
             }
 
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]

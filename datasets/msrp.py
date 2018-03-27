@@ -64,17 +64,19 @@ class MSRP(Dataset):
                 match = self.NUMBER_PATTERN.search(' '.join(l1))
                 if match:
                     for g in match.groups():
-                        sent1_nums.append(g)
+                        if g is not None:
+                            sent1_nums.append(g)
 
                 match = self.NUMBER_PATTERN.search(' '.join(l2))
                 if match:
                     for g in match.groups():
-                        sent2_nums.append(g)
+                        if g is not None:
+                            sent2_nums.append(g)
 
                 sent1_nums = set(sent1_nums)
                 sent2_nums = set(sent2_nums)
                 exact = int(sent1_nums == sent2_nums)
-                superset = sent1_nums.issuperset(sent2_nums) or sent2_nums.issuperset(sent1_nums)
+                superset = int(sent1_nums.issuperset(sent2_nums) or sent2_nums.issuperset(sent1_nums))
                 ext_feats.append(1 if (exact or (len(sent1_nums) == 0 and len(sent2_nums) == 0)) else 0)
                 ext_feats.append(exact)
                 ext_feats.append(superset)

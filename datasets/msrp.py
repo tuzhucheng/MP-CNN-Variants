@@ -1,16 +1,18 @@
-import math
 import os
 import pathlib
+import re
 import shutil
 
 import numpy as np
 import torch
+from torchtext.data.dataset import Dataset
+from torchtext.data.example import Example
 from torchtext.data.field import Field, RawField
 from torchtext.data.iterator import BucketIterator
 from torchtext.data.pipeline import Pipeline
 from torchtext.vocab import Vectors
 
-from datasets.castor_dataset import CastorPairDataset
+from datasets.idf_utils import get_pairwise_word_to_doc_freq
 
 
 def get_class_probs(sim, *args):
@@ -20,14 +22,17 @@ def get_class_probs(sim, *args):
     return [1 - sim, sim]
 
 
-class MSRP(CastorPairDataset):
+class MSRP(Dataset):
     NAME = 'msrp'
     NUM_CLASSES = 2
+    EXT_FEATS = 6
     ID_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
-    TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it to compute external features
+    TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it
     EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
     LABEL_FIELD = Field(sequential=False, tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, postprocessing=Pipeline(get_class_probs))
     RAW_TEXT_FIELD = RawField()
+
+    NUMBER_PATTERN = re.compile(r'((\d+,)*\d+\.?\d*)')
 
     @staticmethod
     def sort_key(ex):
@@ -37,7 +42,55 @@ class MSRP(CastorPairDataset):
         """
         Create a MSRP dataset instance
         """
-        super(MSRP, self).__init__(path)
+        fields = [('id', self.ID_FIELD), ('sentence_1', self.TEXT_FIELD), ('sentence_2', self.TEXT_FIELD), ('ext_feats', self.EXT_FEATS_FIELD),
+                ('label', self.LABEL_FIELD), ('sentence_1_raw', self.RAW_TEXT_FIELD), ('sentence_2_raw', self.RAW_TEXT_FIELD)]
+
+        examples = []
+        with open(os.path.join(path, 'a.toks'), 'r') as f1, open(os.path.join(path, 'b.toks'), 'r') as f2:
+            sent_list_1 = [l.rstrip('.\n').split(' ') for l in f1]
+            sent_list_2 = [l.rstrip('.\n').split(' ') for l in f2]
+
+        word_to_doc_cnt = get_pairwise_word_to_doc_freq(sent_list_1, sent_list_2)
+        self.word_to_doc_cnt = word_to_doc_cnt
+
+        with open(os.path.join(path, 'id.txt'), 'r') as id_file, open(os.path.join(path, 'sim.txt'), 'r') as label_file:
+            for pair_id, l1, l2, label in zip(id_file, sent_list_1, sent_list_2, label_file):
+                pair_id = pair_id.rstrip('.\n')
+                label = label.rstrip('.\n')
+                ext_feats = []
+
+                # Number features
+                sent1_nums, sent2_nums = [], []
+                match = self.NUMBER_PATTERN.search(' '.join(l1))
+                if match:
+                    for g in match.groups():
+                        sent1_nums.append(g)
+
+                match = self.NUMBER_PATTERN.search(' '.join(l2))
+                if match:
+                    for g in match.groups():
+                        sent2_nums.append(g)
+
+                sent1_nums = set(sent1_nums)
+                sent2_nums = set(sent2_nums)
+                exact = int(sent1_nums == sent2_nums)
+                superset = sent1_nums.issuperset(sent2_nums) or sent2_nums.issuperset(sent1_nums)
+                ext_feats.append(1 if (exact or (len(sent1_nums) == 0 and len(sent2_nums) == 0)) else 0)
+                ext_feats.append(exact)
+                ext_feats.append(superset)
+
+                # Length difference
+                ext_feats.append(len(l2) - len(l1))
+
+                # Overlap
+                overlap = len(set(l1) & set(l2))
+                ext_feats.append(overlap / len(l1))
+                ext_feats.append(overlap / len(l2))
+
+                example = Example.fromlist([pair_id, l1, l2, ext_feats, label, ' '.join(l1), ' '.join(l2)], fields)
+                examples.append(example)
+
+        super(MSRP, self).__init__(examples, fields)
 
     @classmethod
     def _read_file(cls, fn):

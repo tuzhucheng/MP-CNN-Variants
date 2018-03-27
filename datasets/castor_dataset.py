@@ -17,6 +17,7 @@ class CastorPairDataset(Dataset, metaclass=ABCMeta):
     EXT_FEATS_FIELD = None
     LABEL_FIELD = None
     RAW_TEXT_FIELD = None
+    EXT_FEATS = 4
 
     @abstractmethod
     def __init__(self, path):

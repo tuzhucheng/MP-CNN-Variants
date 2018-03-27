@@ -37,14 +37,13 @@ class MPCNNCompVertHolisticOnly(MPCNNVariantBase):
 
         # compute number of inputs to first hidden layer
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2
-        EXT_FEATS = 4 if ext_feats else 0
         n_feat_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
             3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
             # comparison units from holistic conv for min, max, mean pooling for infinite widths
             3 * 3
         )
-        n_feat = n_feat_v + EXT_FEATS
+        n_feat = n_feat_v + ext_feats
 
         self.final_layers = nn.Sequential(
             nn.Linear(n_feat, hidden_layer_units),

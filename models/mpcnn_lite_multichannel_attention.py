@@ -33,7 +33,6 @@ class MPCNNLiteMultiChannelAttention(MPCNNVariantBase):
 
         # compute number of inputs to first hidden layer
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2
-        EXT_FEATS = 4 if ext_feats else 0
         n_feat_h = len(self.filter_widths) * COMP_2_COMPONENTS
         n_feat_v = (
             # comparison units from holistic conv for max pooling for non-infinite widths
@@ -41,7 +40,7 @@ class MPCNNLiteMultiChannelAttention(MPCNNVariantBase):
             # comparison units from holistic conv for max pooling for infinite widths
             3
         )
-        n_feat = n_feat_h + n_feat_v + EXT_FEATS
+        n_feat = n_feat_h + n_feat_v + ext_feats
 
         self.final_layers = nn.Sequential(
             nn.Linear(n_feat, hidden_layer_units),

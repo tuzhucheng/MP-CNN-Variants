@@ -30,8 +30,7 @@ class SMCNN(SMCNNVariantBase):
         )
 
         # compute number of inputs to first hidden layer
-        EXT_FEATS = 4 if ext_feats else 0
-        n_feat = 2*n_filters + EXT_FEATS
+        n_feat = 2*n_filters + ext_feats
 
         self.final_layers = nn.Sequential(
             nn.Linear(n_feat, hidden_layer_units),

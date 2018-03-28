@@ -69,7 +69,7 @@ class QATrainer(Trainer):
 
             if dev_scores[0] > best_dev_score:
                 best_dev_score = dev_scores[0]
-                save_checkpoint(epoch, self.model.arch, self.model.cpu().state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
+                save_checkpoint(epoch, self.model.arch, self.model.state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
 
             if abs(prev_loss - new_loss) <= 0.0002:
                 self.logger.info('Early stopping. Loss changed by less than 0.0002.')

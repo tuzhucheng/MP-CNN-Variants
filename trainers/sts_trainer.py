@@ -64,7 +64,7 @@ class STSTrainer(Trainer):
 
             if dev_scores[0] > best_dev_score:
                 best_dev_score = dev_scores[0]
-                save_checkpoint(epoch, self.model.arch, self.model.cpu().state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
+                save_checkpoint(epoch, self.model.arch, self.model.state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
 
             if prev_loss < new_loss and prev_loss != 0:
                 self.logger.info('Early stopping.')

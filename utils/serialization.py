@@ -5,6 +5,9 @@ import torch
 
 
 def save_checkpoint(epoch, arch, state_dict, optimizer_state, eval_metric, filename):
+    for k, tensor in state_dict.items():
+        state_dict[k] = tensor.cpu()
+
     state = {
         'epoch': epoch,
         'arch': arch,

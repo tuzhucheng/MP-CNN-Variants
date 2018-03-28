@@ -14,7 +14,6 @@ from train import MPCNNTrainerFactory
 from utils.serialization import load_checkpoint
 from variants import VariantFactory
 
-
 def get_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
@@ -126,6 +125,12 @@ if __name__ == '__main__':
         trainer.train(args.epochs)
 
     _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)
+
+    if args.device != -1:
+        with torch.cuda.device(args.device):
+            for k, tensor in state_dict.items():
+                state_dict[k] = tensor.cuda()
+
     model.load_state_dict(state_dict)
     if dev_loader:
         evaluate_dataset('dev', dataset_cls, model, embedding, dev_loader, args.batch_size, args.device)

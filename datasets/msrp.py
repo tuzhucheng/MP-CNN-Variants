@@ -2,6 +2,7 @@ import os
 import pathlib
 import re
 import shutil
+import uuid
 
 import numpy as np
 import torch
@@ -105,7 +106,8 @@ class MSRP(Dataset):
     @classmethod
     def splits(cls, path, train='train', test='test', **kwargs):
         # Create temporary files to split train into train and dev
-        train_tmp, dev_tmp = f'{train}-tmp', 'dev-tmp'
+        uid = uuid.uuid4()
+        train_tmp, dev_tmp = f'{train}-tmp-{uid}', f'dev-tmp-{uid}'
         pathlib.Path(os.path.join(path, train_tmp)).mkdir(parents=True, exist_ok=True)
         pathlib.Path(os.path.join(path, dev_tmp)).mkdir(parents=True, exist_ok=True)
 

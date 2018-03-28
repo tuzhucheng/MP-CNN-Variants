@@ -114,7 +114,7 @@ class MSRVIDTrainer(Trainer):
 
             if pearson_r > best_dev_score:
                 best_dev_score = pearson_r
-                save_checkpoint(epoch, self.model.arch, self.model.state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
+                save_checkpoint(epoch, self.model.arch, self.model.cpu().state_dict(), self.optimizer.state_dict(), best_dev_score, self.model_outfile)
 
             if abs(prev_loss - val_kl_div_loss) <= 0.0005:
                 self.logger.info('Early stopping. Loss changed by less than 0.0005.')

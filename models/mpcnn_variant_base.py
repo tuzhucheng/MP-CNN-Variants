@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -16,17 +17,34 @@ class MPCNNVariantBase(nn.Module):
         attention_norms = torch.bmm(sent1_norms, sent2_norms)
         attention_matrix = attention_dot / attention_norms
 
-        attention_weight_vec1 = F.softmax(attention_matrix.sum(2), 1)
-        attention_weight_vec2 = F.softmax(attention_matrix.sum(1), 1)
+        if self.attention == 'idf' and word_to_doc_count is not None:
+            idf_matrix1 = Variable(sent1.data.new(sent1.size(0), sent1.size(2)).fill_(1))
+            for i, sent in enumerate(raw_sent1):
+                for j, word in enumerate(sent.split(' ')):
+                    idf_matrix1[i, j] /= word_to_doc_count.get(word, 1)
+
+            idf_matrix2 = Variable(sent2.data.new(sent2.size(0), sent2.size(2)).fill_(1))
+            for i, sent in enumerate(raw_sent2):
+                for j, word in enumerate(sent.split(' ')):
+                    idf_matrix2[i, j] /= word_to_doc_count.get(word, 1)
+
+            sum_row = (attention_matrix * idf_matrix2.unsqueeze(1)).sum(2)
+            sum_col = (attention_matrix * idf_matrix1.unsqueeze(2)).sum(1)
+        else:
+            sum_row = attention_matrix.sum(2)
+            sum_col = attention_matrix.sum(1)
 
         if self.attention == 'idf' and word_to_doc_count is not None:
             for i, sent in enumerate(raw_sent1):
                 for j, word in enumerate(sent.split(' ')):
-                    attention_weight_vec1[i, j] /= word_to_doc_count.get(word, 1)
+                    sum_row[i, j] /= word_to_doc_count.get(word, 1)
 
             for i, sent in enumerate(raw_sent2):
                 for j, word in enumerate(sent.split(' ')):
-                    attention_weight_vec2[i, j] /= word_to_doc_count.get(word, 1)
+                    sum_col[i, j] /= word_to_doc_count.get(word, 1)
+
+        attention_weight_vec1 = F.softmax(sum_row, 1)
+        attention_weight_vec2 = F.softmax(sum_col, 1)
 
         attention_weighted_sent1 = attention_weight_vec1.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent1
         attention_weighted_sent2 = attention_weight_vec2.unsqueeze(1).expand(-1, self.n_word_dim, -1) * sent2

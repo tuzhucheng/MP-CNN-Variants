@@ -16,13 +16,6 @@ from torchtext.vocab import Vectors
 from datasets.idf_utils import get_pairwise_word_to_doc_freq
 
 
-def get_class_probs(sim, *args):
-    """
-    Convert a single label into class probabilities.
-    """
-    return [1 - sim, sim]
-
-
 class MSRP(Dataset):
     NAME = 'msrp'
     NUM_CLASSES = 2
@@ -30,7 +23,7 @@ class MSRP(Dataset):
     ID_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it
     EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
-    LABEL_FIELD = Field(sequential=False, tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, postprocessing=Pipeline(get_class_probs))
+    LABEL_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     RAW_TEXT_FIELD = RawField()
 
     NUMBER_PATTERN = re.compile(r'((\d+,)*\d+\.?\d*)')

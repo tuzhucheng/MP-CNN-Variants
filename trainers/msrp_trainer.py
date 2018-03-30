@@ -24,7 +24,7 @@ class MSRPTrainer(Trainer):
             sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
 
             output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw)
-            loss = F.kl_div(output, batch.label, size_average=False)
+            loss = F.cross_entropy(output, batch.label, size_average=False)
             total_loss += loss.data[0]
             loss.backward()
             self.optimizer.step()
@@ -37,7 +37,7 @@ class MSRPTrainer(Trainer):
 
         total_loss /= len(batch.dataset.examples)
         if self.use_tensorboard:
-            self.writer.add_scalar('sick/train/kl_div_loss', total_loss, epoch)
+            self.writer.add_scalar('sick/train/cross_entropy_loss', total_loss, epoch)
 
         return total_loss
 
@@ -58,7 +58,7 @@ class MSRPTrainer(Trainer):
                 self.writer.add_scalar('sick/lr', self.optimizer.param_groups[0]['lr'], epoch)
                 self.writer.add_scalar('sick/dev/accuracy', dev_scores[0], epoch)
                 self.writer.add_scalar('sick/dev/f1', dev_scores[1], epoch)
-                self.writer.add_scalar('sick/dev/kl_div_loss', new_loss, epoch)
+                self.writer.add_scalar('sick/dev/cross_entropy_loss', new_loss, epoch)
 
             end = time.time()
             duration = end - start

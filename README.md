@@ -82,7 +82,7 @@ python main.py mpcnn.msrp.model --dataset msrp --epochs 15
 
 Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
 
-You should be able to obtain accuracy to be 0.7629 and f1 score to be 0.8289.
+You should be able to obtain accuracy to be 0.7617 and f1 score to be 0.8221.
 
 To see all options available, use
 ```

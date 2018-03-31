@@ -123,7 +123,7 @@ if __name__ == '__main__':
         'run_label': args.run_label,
         'logger': logger
     }
-    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator, nonstatic_embedding)
 
     if not args.skip_training:
         total_params = 0
@@ -131,6 +131,9 @@ if __name__ == '__main__':
             size = [s for s in param.size()]
             total_params += np.prod(size)
         logger.info('Total number of parameters: %s', total_params)
+
+        if args.multichannel:
+            logger.info('Nonstatic embedding size: %s', nonstatic_embedding.weight.size())
         trainer.train(args.epochs)
 
     _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)

@@ -8,9 +8,6 @@ from evaluators.evaluator import Evaluator
 
 class STSEvaluator(Evaluator):
 
-    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device):
-        super(STSEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device)
-
     def get_scores(self):
         self.model.eval()
         num_classes = self.dataset_cls.NUM_CLASSES

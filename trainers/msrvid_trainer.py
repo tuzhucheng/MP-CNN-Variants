@@ -12,9 +12,6 @@ from utils.serialization import save_checkpoint
 
 class MSRVIDTrainer(Trainer):
 
-    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(MSRVIDTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
-
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0

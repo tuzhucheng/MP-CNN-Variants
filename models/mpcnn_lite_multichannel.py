@@ -8,7 +8,7 @@ from models.mpcnn_variant_base import MPCNNVariantBase
 
 class MPCNNLiteMultichannel(MPCNNVariantBase):
 
-    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
+    def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv, nonstatic):
         super(MPCNNLiteMultichannel, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, 'none', wide_conv)  # No attention
         self.arch = 'mpcnn_lite_multichannel'  # aka MP-CNN Lite
         self.n_word_dim = n_word_dim
@@ -16,6 +16,7 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
         self.wide_conv = wide_conv
+        self.nonstatic = nonstatic
         holistic_conv_layers = []
 
         for ws in filter_widths:
@@ -23,9 +24,10 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
                 continue
 
             padding = (0, ws - 1) if wide_conv else 0
+            channels = 2 if nonstatic else 1
 
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv2d(1, n_holistic_filters, (n_word_dim, ws), padding=padding),
+                nn.Conv2d(channels, n_holistic_filters, (n_word_dim, ws), padding=padding),
                 nn.Tanh()
             ))
 
@@ -81,7 +83,7 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         comparison_feats = []
         ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
         for pool in ('max', ):
-            for ws1 in self.filter_widths:
+            for ws1 in ws_no_inf:
                 x1 = sent1_block_a[ws1][pool]
                 batch_size = x1.size()[0]
                 for ws2 in self.filter_widths:
@@ -97,6 +99,12 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         # Adapt to 2D Conv
         sent1 = torch.unsqueeze(sent1, dim=1)
         sent2 = torch.unsqueeze(sent2, dim=1)
+
+        if self.multichannel:
+            sent1_nonstatic = torch.unsqueeze(sent1_nonstatic, dim=1)
+            sent2_nonstatic = torch.unsqueeze(sent2_nonstatic, dim=1)
+            sent1 = torch.cat([sent1, sent1_nonstatic], dim=1)
+            sent2 = torch.cat([sent2, sent2_nonstatic], dim=1)
 
         # Sentence modeling module
         sent1_block_a = self._get_blocks_for_sentence(sent1)

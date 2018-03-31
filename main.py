@@ -125,6 +125,7 @@ if __name__ == '__main__':
     }
     trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator, nonstatic_embedding)
 
+    # TODO currently saving & loading non-static embedding is not supported
     if not args.skip_training:
         total_params = 0
         for param in model.parameters():

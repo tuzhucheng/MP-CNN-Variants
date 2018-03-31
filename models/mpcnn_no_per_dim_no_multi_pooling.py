@@ -101,7 +101,7 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
     def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         # Attention
         if self.attention != 'none':
-            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)
+            sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2, sent1_nonstatic=None, sent2_nonstatic=None)
 
         # Sentence modeling module
         sent1_block_a = self._get_blocks_for_sentence(sent1)

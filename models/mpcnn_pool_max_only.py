@@ -96,7 +96,7 @@ class MPCNNPoolMaxOnly(MPCNNVariantBase):
                 comparison_feats.append(F.pairwise_distance(x1, x2))
         return torch.cat(comparison_feats, dim=1)
 
-    def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
+    def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b, sent1_nonstatic=None, sent2_nonstatic=None):
         comparison_feats = []
         ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
         for pool in ('max', ):

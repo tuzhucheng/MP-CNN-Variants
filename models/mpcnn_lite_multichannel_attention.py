@@ -125,7 +125,7 @@ class MPCNNLiteMultiChannelAttention(MPCNNVariantBase):
         attention_emb2 = torch.cat((sent2_4d, attention_weighted_sent2_4d), dim=1)
         return attention_emb1, attention_emb2
 
-    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
+    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None, sent1_nonstatic=None, sent2_nonstatic=None):
         # Add attention feature map
         sent1, sent2 = self.concat_attention(sent1, sent2)
 

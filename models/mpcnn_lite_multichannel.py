@@ -15,15 +15,17 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         self.n_holistic_filters = n_holistic_filters
         self.filter_widths = filter_widths
         self.ext_feats = ext_feats
-        # TODO support wide conv
+        self.wide_conv = wide_conv
         holistic_conv_layers = []
 
         for ws in filter_widths:
             if np.isinf(ws):
                 continue
 
+            padding = (0, ws - 1) if wide_conv else 0
+
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv2d(1, n_holistic_filters, (n_word_dim, ws)),
+                nn.Conv2d(1, n_holistic_filters, (n_word_dim, ws), padding=padding),
                 nn.Tanh()
             ))
 

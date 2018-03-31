@@ -7,8 +7,8 @@ from evaluators.evaluator import Evaluator
 
 class MSRPEvaluator(Evaluator):
 
-    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device):
-        super(MSRPEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device)
+    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device, nonstatic_embedding=None):
+        super(MSRPEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device, nonstatic_embedding)
 
     def get_scores(self):
         self.model.eval()

@@ -20,7 +20,7 @@ class MPCNNEvaluatorFactory(object):
     }
 
     @staticmethod
-    def get_evaluator(dataset_cls, model, embedding, data_loader, batch_size, device):
+    def get_evaluator(dataset_cls, model, embedding, data_loader, batch_size, device, nonstatic_embedding):
         if data_loader is None:
             return None
 
@@ -31,5 +31,5 @@ class MPCNNEvaluatorFactory(object):
             raise ValueError('{} is not implemented.'.format(dataset_cls))
 
         return MPCNNEvaluatorFactory.evaluator_map[dataset_cls.NAME](
-            dataset_cls, model, embedding, data_loader, batch_size, device
+            dataset_cls, model, embedding, data_loader, batch_size, device, nonstatic_embedding
         )

@@ -32,6 +32,17 @@ class Trainer(object):
         self.logger.info('\t'.join([dataset_name] + list(map(str, scores))))
         return scores
 
+    def get_sentence_embeddings(self, batch):
+        sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
+        sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+
+        sent1_nonstatic, sent2_nonstatic = None, None
+        if self.nonstatic_embedding is not None:
+            sent1_nonstatic = self.nonstatic_embedding(batch.sentence_1).transpose(1, 2)
+            sent2_nonstatic = self.nonstatic_embedding(batch.sentence_2).transpose(1, 2)
+
+        return sent1, sent2, sent1_nonstatic, sent2_nonstatic
+
     def train_epoch(self, epoch):
         raise NotImplementedError()
 

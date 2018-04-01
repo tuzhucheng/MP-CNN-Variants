@@ -52,9 +52,15 @@ class VariantFactory(object):
             }
 
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-            model = model_map[args.arch](args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
-                          args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, ext_feats,
-                          args.attention, args.wide_conv)
+            if args.arch in ('mpcnn_lite_multichannel'):
+                model = model_map[args.arch](args.word_vectors_dim, args.holistic_filters, args.per_dim_filters,
+                                             filter_widths,
+                                             args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, ext_feats,
+                                             args.attention, args.wide_conv, args.multichannel)
+            else:
+                model = model_map[args.arch](args.word_vectors_dim, args.holistic_filters, args.per_dim_filters, filter_widths,
+                                              args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, ext_feats,
+                                              args.attention, args.wide_conv)
         elif args.arch == 'smcnn':
             model = SMCNN(args.word_vectors_dim, args.holistic_filters, args.max_window_size, args.hidden_units,
                           dataset_cls.NUM_CLASSES, args.dropout, ext_feats, args.attention, args.wide_conv)

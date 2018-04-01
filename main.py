@@ -1,4 +1,5 @@
 import argparse
+import copy
 import logging
 import os
 import pprint
@@ -27,8 +28,8 @@ def get_logger():
     return logger
 
 
-def evaluate_dataset(split_name, dataset_cls, model, embedding, loader, batch_size, device):
-    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, loader, batch_size, device)
+def evaluate_dataset(split_name, dataset_cls, model, embedding, loader, batch_size, device, nonstatic_embedding):
+    saved_model_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, loader, batch_size, device, nonstatic_embedding)
     scores, metric_names = saved_model_evaluator.get_scores()
     logger.info('Evaluation metrics for {}'.format(split_name))
     logger.info('\t'.join([' '] + metric_names))
@@ -45,7 +46,8 @@ if __name__ == '__main__':
     parser.add_argument('--word-vectors-dim', type=int, default=300, help='number of dimensions of word vectors (default: 300)')
     parser.add_argument('--skip-training', help='will load pre-trained model', action='store_true')
     parser.add_argument('--device', type=int, default=0, help='GPU device, -1 for CPU (default: 0)')
-    parser.add_argument('--wide-conv', action='store_true', default=False, help='use wide convolution instead of narrow convolution')
+    parser.add_argument('--wide-conv', action='store_true', default=False, help='use wide convolution instead of narrow convolution (default: false)')
+    parser.add_argument('--multichannel', action='store_true', default=False, help='use multichannels to enable embedding update (default: false)')
     parser.add_argument('--attention', choices=['none', 'basic', 'idf', 'modified_euclidean'], default='none', help='type of attention to use')
     parser.add_argument('--sparse-features', action='store_true', default=False, help='use sparse features (default: false)')
     parser.add_argument('--batch-size', type=int, default=64, help='input batch size for training (default: 64)')
@@ -81,14 +83,21 @@ if __name__ == '__main__':
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
         = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, args.device)
     embedding.weight.requires_grad = False
-    if args.device != -1:
-        with torch.cuda.device(args.device):
-            embedding = embedding.cuda()
+
+    if args.multichannel:
+        nonstatic_embedding = copy.deepcopy(embedding)
+        nonstatic_embedding.weight.requires_grad = True
+    else:
+        nonstatic_embedding = None
 
     model = VariantFactory.get_model(args, dataset_cls)
 
     if args.device != -1:
         with torch.cuda.device(args.device):
+            embedding = embedding.cuda()
+            if args.multichannel:
+                nonstatic_embedding = nonstatic_embedding.cuda()
+
             model.cuda()
 
     optimizer = None
@@ -99,9 +108,9 @@ if __name__ == '__main__':
     else:
         optimizer = optim.Adadelta(model.parameters(), lr=args.lr, weight_decay=args.regularization, eps=args.epsilon)
 
-    train_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, train_loader, args.batch_size, args.device)
-    test_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
-    dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, dev_loader, args.batch_size, args.device)
+    train_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, train_loader, args.batch_size, args.device, nonstatic_embedding)
+    test_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, test_loader, args.batch_size, args.device, nonstatic_embedding)
+    dev_evaluator = MPCNNEvaluatorFactory.get_evaluator(dataset_cls, model, embedding, dev_loader, args.batch_size, args.device, nonstatic_embedding)
 
     trainer_config = {
         'optimizer': optimizer,
@@ -114,14 +123,18 @@ if __name__ == '__main__':
         'run_label': args.run_label,
         'logger': logger
     }
-    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
+    trainer = MPCNNTrainerFactory.get_trainer(args.dataset, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator, nonstatic_embedding)
 
+    # TODO currently saving & loading non-static embedding is not supported
     if not args.skip_training:
         total_params = 0
         for param in model.parameters():
             size = [s for s in param.size()]
             total_params += np.prod(size)
         logger.info('Total number of parameters: %s', total_params)
+
+        if args.multichannel:
+            logger.info('Nonstatic embedding size: %s', nonstatic_embedding.weight.size())
         trainer.train(args.epochs)
 
     _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)
@@ -133,8 +146,8 @@ if __name__ == '__main__':
 
     model.load_state_dict(state_dict)
     if dev_loader:
-        evaluate_dataset('dev', dataset_cls, model, embedding, dev_loader, args.batch_size, args.device)
-    evaluate_dataset('test', dataset_cls, model, embedding, test_loader, args.batch_size, args.device)
+        evaluate_dataset('dev', dataset_cls, model, embedding, dev_loader, args.batch_size, args.device, nonstatic_embedding)
+    evaluate_dataset('test', dataset_cls, model, embedding, test_loader, args.batch_size, args.device, nonstatic_embedding)
 
     if args.save_predictions:
         for dataset_name, loader in zip(('train', 'test', 'dev'), (train_loader, test_loader, dev_loader)):

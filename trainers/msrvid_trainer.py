@@ -12,9 +12,6 @@ from utils.serialization import save_checkpoint
 
 class MSRVIDTrainer(Trainer):
 
-    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(MSRVIDTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
-
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0
@@ -36,10 +33,9 @@ class MSRVIDTrainer(Trainer):
                 continue
             self.optimizer.zero_grad()
             # Select embedding
-            sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
-            sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+            sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
-            output = self.model(sent1, sent2, batch.ext_feats)
+            output = self.model(sent1, sent2, batch.ext_feats, sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
             loss = F.kl_div(output, batch.label)
             total_loss += loss.data[0]
             loss.backward()
@@ -75,8 +71,12 @@ class MSRVIDTrainer(Trainer):
                 # Select embedding
                 sent1 = self.embedding(left_out_a[i]).transpose(1, 2)
                 sent2 = self.embedding(left_out_b[i]).transpose(1, 2)
+                sent1_nonstatic, sent2_nonstatic = None, None
+                if self.nonstatic_embedding is not None:
+                    sent1_nonstatic = self.nonstatic_embedding(left_out_a[i]).transpose(1, 2)
+                    sent2_nonstatic = self.nonstatic_embedding(left_out_b[i]).transpose(1, 2)
 
-                output = self.model(sent1, sent2, left_out_ext_feats[i])
+                output = self.model(sent1, sent2, left_out_ext_feats[i], sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
                 val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).data[0]
                 predict_classes = torch.arange(0, self.train_loader.dataset.NUM_CLASSES).expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
                 if self.train_loader.device != -1:

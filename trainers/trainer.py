@@ -4,7 +4,7 @@ class Trainer(object):
     Abstraction for training a model on a Dataset.
     """
 
-    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
+    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None, nonstatic_embedding=None):
         self.model = model
         self.embedding = embedding
         self.optimizer = trainer_config['optimizer']
@@ -23,6 +23,7 @@ class Trainer(object):
         self.train_evaluator = train_evaluator
         self.test_evaluator = test_evaluator
         self.dev_evaluator = dev_evaluator
+        self.nonstatic_embedding = nonstatic_embedding
 
     def evaluate(self, evaluator, dataset_name):
         scores, metric_names = evaluator.get_scores()
@@ -30,6 +31,17 @@ class Trainer(object):
         self.logger.info('\t'.join([' '] + metric_names))
         self.logger.info('\t'.join([dataset_name] + list(map(str, scores))))
         return scores
+
+    def get_sentence_embeddings(self, batch):
+        sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
+        sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+
+        sent1_nonstatic, sent2_nonstatic = None, None
+        if self.nonstatic_embedding is not None:
+            sent1_nonstatic = self.nonstatic_embedding(batch.sentence_1).transpose(1, 2)
+            sent2_nonstatic = self.nonstatic_embedding(batch.sentence_2).transpose(1, 2)
+
+        return sent1, sent2, sent1_nonstatic, sent2_nonstatic
 
     def train_epoch(self, epoch):
         raise NotImplementedError()

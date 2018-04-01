@@ -8,9 +8,6 @@ from evaluators.evaluator import Evaluator
 
 class MSRVIDEvaluator(Evaluator):
 
-    def __init__(self, dataset_cls, model, embedding, data_loader, batch_size, device):
-        super(MSRVIDEvaluator, self).__init__(dataset_cls, model, embedding, data_loader, batch_size, device)
-
     def get_scores(self):
         self.model.eval()
         num_classes = self.dataset_cls.NUM_CLASSES
@@ -21,10 +18,9 @@ class MSRVIDEvaluator(Evaluator):
 
         for batch in self.data_loader:
             # Select embedding
-            sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
-            sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+            sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
-            output = self.model(sent1, sent2, batch.ext_feats)
+            output = self.model(sent1, sent2, batch.ext_feats, sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
             test_kl_div_loss += F.kl_div(output, batch.label, size_average=False).data[0]
             # handle last batch which might have smaller size
             if len(predict_classes) != len(batch.sentence_1):

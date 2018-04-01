@@ -77,7 +77,7 @@ class SMCNNWithComp(SMCNNVariantBase):
 
         return torch.cat(comparison_feats, dim=1)
 
-    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
+    def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None, sent1_nonstatic=None, sent2_nonstatic=None):
         # Attention
         if self.attention != 'none':
             sent1, sent2 = self.concat_attention(sent1, sent2, word_to_doc_count, raw_sent1, raw_sent2)

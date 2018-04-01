@@ -9,9 +9,6 @@ from utils.serialization import save_checkpoint
 
 class STSTrainer(Trainer):
 
-    def __init__(self, model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator=None):
-        super(STSTrainer, self).__init__(model, embedding, train_loader, trainer_config, train_evaluator, test_evaluator, dev_evaluator)
-
     def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0
@@ -19,10 +16,9 @@ class STSTrainer(Trainer):
             self.optimizer.zero_grad()
 
             # Select embedding
-            sent1 = self.embedding(batch.sentence_1).transpose(1, 2)
-            sent2 = self.embedding(batch.sentence_2).transpose(1, 2)
+            sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
-            output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw)
+            output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw, sent1_nonstatic, sent2_nonstatic)
             loss = F.kl_div(output, batch.label)
             total_loss += loss.data[0]
             loss.backward()

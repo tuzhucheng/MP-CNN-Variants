@@ -35,12 +35,13 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
 
         # compute number of inputs to first hidden layer
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2
+        INF_COMP_FEATS = 4 if nonstatic else 3
         n_feat_h = len(self.filter_widths) * COMP_2_COMPONENTS
         n_feat_v = (
             # comparison units from holistic conv for max pooling for non-infinite widths
             ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
             # comparison units from holistic conv for max pooling for infinite widths
-            3
+            INF_COMP_FEATS
         )
         n_feat = n_feat_h + n_feat_v + ext_feats
 
@@ -81,9 +82,8 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
-        ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
         for pool in ('max', ):
-            for ws1 in ws_no_inf:
+            for ws1 in self.filter_widths:
                 x1 = sent1_block_a[ws1][pool]
                 batch_size = x1.size()[0]
                 for ws2 in self.filter_widths:
@@ -100,7 +100,7 @@ class MPCNNLiteMultichannel(MPCNNVariantBase):
         sent1 = torch.unsqueeze(sent1, dim=1)
         sent2 = torch.unsqueeze(sent2, dim=1)
 
-        if self.multichannel:
+        if self.nonstatic:
             sent1_nonstatic = torch.unsqueeze(sent1_nonstatic, dim=1)
             sent2_nonstatic = torch.unsqueeze(sent2_nonstatic, dim=1)
             sent1 = torch.cat([sent1, sent1_nonstatic], dim=1)

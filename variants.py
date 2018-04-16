@@ -52,7 +52,7 @@ class VariantFactory(object):
             }
 
             filter_widths = list(range(1, args.max_window_size + 1)) + [np.inf]
-            if args.arch in ('mpcnn_lite_multichannel'):
+            if args.arch in ('mpcnn_lite_multichannel', ):
                 model = model_map[args.arch](args.word_vectors_dim, args.holistic_filters, args.per_dim_filters,
                                              filter_widths,
                                              args.hidden_units, dataset_cls.NUM_CLASSES, args.dropout, ext_feats,

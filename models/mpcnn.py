@@ -96,10 +96,10 @@ class MPCNN(MPCNNVariantBase):
             for ws in self.filter_widths:
                 x1 = sent1_block_a[ws][pool]
                 x2 = sent2_block_a[ws][pool]
-                batch_size = x1.size()[0]
-                comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
+                comparison_feats.append(F.cosine_similarity(x1, x2))
                 comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.cat(comparison_feats, dim=1)
+
+        return torch.stack(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
         comparison_feats = []
@@ -107,12 +107,11 @@ class MPCNN(MPCNNVariantBase):
         for pool in ('max', 'min', 'mean'):
             for ws1 in self.filter_widths:
                 x1 = sent1_block_a[ws1][pool]
-                batch_size = x1.size()[0]
                 for ws2 in self.filter_widths:
                     x2 = sent2_block_a[ws2][pool]
                     if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-                        comparison_feats.append(F.pairwise_distance(x1, x2))
+                        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
                         comparison_feats.append(torch.abs(x1 - x2))
 
         for pool in ('max', 'min'):
@@ -122,9 +121,8 @@ class MPCNN(MPCNNVariantBase):
                 for i in range(0, self.n_per_dim_filters):
                     x1 = oG_1B[:, :, i]
                     x2 = oG_2B[:, :, i]
-                    batch_size = x1.size()[0]
-                    comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-                    comparison_feats.append(F.pairwise_distance(x1, x2))
+                    comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+                    comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
                     comparison_feats.append(torch.abs(x1 - x2))
 
         return torch.cat(comparison_feats, dim=1)

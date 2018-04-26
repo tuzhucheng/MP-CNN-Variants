@@ -15,6 +15,7 @@ from train import MPCNNTrainerFactory
 from utils.serialization import load_checkpoint
 from variants import VariantFactory
 
+
 def get_logger():
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
@@ -71,6 +72,8 @@ if __name__ == '__main__':
     parser.add_argument('--save-predictions', action='store_true', default=False, help='save predictions for debugging (default: false)')
     args = parser.parse_args()
 
+    device = torch.device(f'cuda:{args.device}' if torch.cuda.is_available() and args.device >= 0 else 'cpu')
+
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
@@ -92,13 +95,10 @@ if __name__ == '__main__':
 
     model = VariantFactory.get_model(args, dataset_cls)
 
-    if args.device != -1:
-        with torch.cuda.device(args.device):
-            embedding = embedding.cuda()
-            if args.multichannel:
-                nonstatic_embedding = nonstatic_embedding.cuda()
-
-            model.cuda()
+    model = model.to(device)
+    embedding = embedding.to(device)
+    if args.multichannel:
+        nonstatic_embedding = nonstatic_embedding.to(device)
 
     optimizer = None
     if args.optimizer == 'adam':
@@ -139,10 +139,8 @@ if __name__ == '__main__':
 
     _, _, state_dict, _, _ = load_checkpoint(args.model_outfile)
 
-    if args.device != -1:
-        with torch.cuda.device(args.device):
-            for k, tensor in state_dict.items():
-                state_dict[k] = tensor.cuda()
+    for k, tensor in state_dict.items():
+        state_dict[k] = tensor.to(device)
 
     model.load_state_dict(state_dict)
     if dev_loader:

@@ -51,7 +51,7 @@ class QATrainer(Trainer):
             self.train_epoch(epoch)
 
             dev_scores = self.evaluate(self.dev_evaluator, 'dev')
-            new_loss, mean_average_precision, mean_reciprocal_rank = dev_scores
+            mean_average_precision, mean_reciprocal_rank, new_loss = dev_scores
 
             if self.use_tensorboard:
                 self.writer.add_scalar('{}/lr'.format(self.train_loader.dataset.NAME), self.optimizer.param_groups[0]['lr'], epoch)

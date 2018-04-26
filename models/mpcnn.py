@@ -43,25 +43,29 @@ class MPCNN(MPCNNVariantBase):
         self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
 
         # compute number of inputs to first hidden layer
-        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + n_holistic_filters, 2 + self.in_channels, 2
-        n_feat_h = 3 * len(self.filter_widths) * COMP_2_COMPONENTS
-        n_feat_v = (
-            # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
-            3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
-            # comparison units from holistic conv for min, max, mean pooling for infinite widths
-            3 * 3 +
-            # comparison units from per-dim conv
-            2 * (len(self.filter_widths) - 1) * n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
-        )
-        n_feat = n_feat_h + n_feat_v + ext_feats
+        n_feats = self._get_n_feats()
 
         self.final_layers = nn.Sequential(
-            nn.Linear(n_feat, hidden_layer_units),
+            nn.Linear(n_feats, hidden_layer_units),
             nn.Tanh(),
             nn.Dropout(dropout),
             nn.Linear(hidden_layer_units, num_classes),
             nn.LogSoftmax(1)
         )
+
+    def _get_n_feats(self):
+        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + self.n_holistic_filters, 2 + self.in_channels, 2
+        n_feats_h = 3 * len(self.filter_widths) * COMP_2_COMPONENTS
+        n_feats_v = (
+            # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
+            3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
+            # comparison units from holistic conv for min, max, mean pooling for infinite widths
+            3 * 3 +
+            # comparison units from per-dim conv
+            2 * (len(self.filter_widths) - 1) * self.n_per_dim_filters * COMP_1_COMPONENTS_PER_DIM
+        )
+        n_feats = n_feats_h + n_feats_v + self.ext_feats
+        return n_feats
 
     def _get_blocks_for_sentence(self, sent):
         block_a = {}

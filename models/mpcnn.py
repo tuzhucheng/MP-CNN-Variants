@@ -18,29 +18,10 @@ class MPCNN(MPCNNVariantBase):
         self.ext_feats = ext_feats
         self.attention = attention
         self.wide_conv = wide_conv
-        holistic_conv_layers = []
-        per_dim_conv_layers = []
 
         self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
 
-        for ws in filter_widths:
-            if np.isinf(ws):
-                continue
-
-            padding = ws-1 if wide_conv else 0
-
-            holistic_conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, n_holistic_filters, ws, padding=padding),
-                nn.Tanh()
-            ))
-
-            per_dim_conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, self.in_channels * n_per_dim_filters, ws, padding=padding, groups=self.in_channels),
-                nn.Tanh()
-            ))
-
-        self.holistic_conv_layers = nn.ModuleList(holistic_conv_layers)
-        self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
+        self._add_layers()
 
         # compute number of inputs to first hidden layer
         n_feats = self._get_n_feats()
@@ -52,6 +33,29 @@ class MPCNN(MPCNNVariantBase):
             nn.Linear(hidden_layer_units, num_classes),
             nn.LogSoftmax(1)
         )
+
+    def _add_layers(self):
+        holistic_conv_layers = []
+        per_dim_conv_layers = []
+
+        for ws in self.filter_widths:
+            if np.isinf(ws):
+                continue
+
+            padding = ws-1 if self.wide_conv else 0
+
+            holistic_conv_layers.append(nn.Sequential(
+                nn.Conv1d(self.in_channels, self.n_holistic_filters, ws, padding=padding),
+                nn.Tanh()
+            ))
+
+            per_dim_conv_layers.append(nn.Sequential(
+                nn.Conv1d(self.in_channels, self.in_channels * self.n_per_dim_filters, ws, padding=padding, groups=self.in_channels),
+                nn.Tanh()
+            ))
+
+        self.holistic_conv_layers = nn.ModuleList(holistic_conv_layers)
+        self.per_dim_conv_layers = nn.ModuleList(per_dim_conv_layers)
 
     def _get_n_feats(self):
         COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + self.n_holistic_filters, 2 + self.in_channels, 2

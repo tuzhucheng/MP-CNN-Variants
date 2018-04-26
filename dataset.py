@@ -82,4 +82,3 @@ class MPCNNDatasetFactory(object):
             return WikiQA, embedding, train_loader, test_loader, dev_loader
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))
-

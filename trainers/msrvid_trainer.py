@@ -37,14 +37,14 @@ class MSRVIDTrainer(Trainer):
 
             output = self.model(sent1, sent2, batch.ext_feats, sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
             loss = F.kl_div(output, batch.label)
-            total_loss += loss.data[0]
+            total_loss += loss.item()
             loss.backward()
             self.optimizer.step()
             if batch_idx % self.log_interval == 0:
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, min(batch_idx * self.batch_size, len(batch.dataset.examples)),
                     len(batch.dataset.examples),
-                    100. * batch_idx / (len(self.train_loader)), loss.data[0])
+                    100. * batch_idx / (len(self.train_loader)), loss.item())
                 )
 
         self.evaluate(self.train_evaluator, 'train')
@@ -77,14 +77,12 @@ class MSRVIDTrainer(Trainer):
                     sent2_nonstatic = self.nonstatic_embedding(left_out_b[i]).transpose(1, 2)
 
                 output = self.model(sent1, sent2, left_out_ext_feats[i], sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
-                val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).data[0]
-                predict_classes = torch.arange(0, self.train_loader.dataset.NUM_CLASSES).expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
-                if self.train_loader.device != -1:
-                    with torch.cuda.device(self.train_loader.device):
-                        predict_classes = predict_classes.cuda()
+                val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).item()
+                predict_classes = left_out_a[i].new_tensor(torch.arange(0, self.train_loader.dataset.NUM_CLASSES))\
+                                    .expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
 
-                predictions = (predict_classes * output.data.exp()).sum(dim=1)
-                true_labels = (predict_classes * left_out_label[i].data).sum(dim=1)
+                predictions = (predict_classes * output.detach().exp()).sum(dim=1)
+                true_labels = (predict_classes * left_out_label[i].detach()).sum(dim=1)
                 all_predictions.append(predictions)
                 all_true_labels.append(true_labels)
 
@@ -97,7 +95,7 @@ class MSRVIDTrainer(Trainer):
                 self.writer.add_scalar('msrvid/dev/pearson_r', pearson_r, epoch)
 
             for param_group in self.optimizer.param_groups:
-                self.logger.info('Validation size: %s Pearson\'s r: %s', output.size()[0], pearson_r)
+                self.logger.info('Validation size: %s Pearson\'s r: %s', output.size(0), pearson_r)
                 self.logger.info('Learning rate: %s', param_group['lr'])
 
                 if self.use_tensorboard:

@@ -18,10 +18,10 @@ class MSRPEvaluator(Evaluator):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw, sent1_nonstatic, sent2_nonstatic)
-            test_cross_entropy_loss += F.cross_entropy(output, batch.label, size_average=False).data[0]
+            test_cross_entropy_loss += F.cross_entropy(output, batch.label, size_average=False).item()
 
-            true_labels.append(batch.label.data)
-            predictions.append(output.exp().data)
+            true_labels.append(batch.label.detach())
+            predictions.append(output.exp().detach())
 
             del output
 

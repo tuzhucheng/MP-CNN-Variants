@@ -1,5 +1,4 @@
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -18,12 +17,12 @@ class MPCNNVariantBase(nn.Module):
         attention_matrix = attention_dot / attention_norms
 
         if self.attention == 'idf' and word_to_doc_count is not None:
-            idf_matrix1 = Variable(sent1.data.new(sent1.size(0), sent1.size(2)).fill_(1))
+            idf_matrix1 = sent1.data.new_ones(sent1.size(0), sent1.size(2))
             for i, sent in enumerate(raw_sent1):
                 for j, word in enumerate(sent.split(' ')):
                     idf_matrix1[i, j] /= word_to_doc_count.get(word, 1)
 
-            idf_matrix2 = Variable(sent2.data.new(sent2.size(0), sent2.size(2)).fill_(1))
+            idf_matrix2 = sent2.data.new_ones(sent2.size(0), sent2.size(2)).fill_(1)
             for i, sent in enumerate(raw_sent2):
                 for j, word in enumerate(sent.split(' ')):
                     idf_matrix2[i, j] /= word_to_doc_count.get(word, 1)

@@ -61,18 +61,16 @@ class SMCNNWithComp(SMCNNVariantBase):
         comparison_feats = []
         x1 = sent1_block_a[self.filter_width]['max']
         x2 = sent2_block_a[self.filter_width]['max']
-        batch_size = x1.size()[0]
-        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
+        comparison_feats.append(F.cosine_similarity(x1, x2))
         comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.cat(comparison_feats, dim=1)
+        return torch.stack(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
         x1 = sent1_block_a[self.filter_width]['max']
-        batch_size = x1.size()[0]
         x2 = sent2_block_a[self.filter_width]['max']
-        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-        comparison_feats.append(F.pairwise_distance(x1, x2))
+        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
         comparison_feats.append(torch.abs(x1 - x2))
 
         return torch.cat(comparison_feats, dim=1)

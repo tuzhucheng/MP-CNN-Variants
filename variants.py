@@ -18,6 +18,7 @@ from models.mpcnn_comp_abs_diff import MPCNNCompAbsDiff
 from models.mpcnn_comp_cosine import MPCNNCompCosine
 from models.mpcnn_comp_euclidean import MPCNNCompEuclidean
 from models.mpcnn_holistic_pool_max_only import MPCNNHolisticPoolMaxOnly
+from models.mpcnn_shared_filters import MPCNNSharedFilters
 from models.mpcnn_no_inf import MPCNNNoInf
 from models.mpcnn_single_window import MPCNNSingleWindow
 from models.mpcnn_single_window_with_inf import MPCNNSingleWindowWithInf
@@ -49,6 +50,7 @@ class VariantFactory(object):
                 'mpcnn_comp_cosine': MPCNNCompCosine,
                 'mpcnn_comp_euclidean': MPCNNCompEuclidean,
                 'mpcnn_holistic_pool_max_only': MPCNNHolisticPoolMaxOnly,
+                'mpcnn_shared_filters': MPCNNSharedFilters,
                 'mpcnn_no_inf': MPCNNNoInf,
                 'mpcnn_single_window': MPCNNSingleWindow,
                 'mpcnn_single_window_with_inf': MPCNNSingleWindowWithInf,

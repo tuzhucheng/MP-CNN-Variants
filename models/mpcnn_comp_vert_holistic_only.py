@@ -3,48 +3,30 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.mpcnn_variant_base import MPCNNVariantBase
+from models.mpcnn import MPCNN
 
 
-class MPCNNCompVertHolisticOnly(MPCNNVariantBase):
+class MPCNNCompVertHolisticOnly(MPCNN):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
         super(MPCNNCompVertHolisticOnly, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
         self.arch = 'mpcnn_comp_vert_holistic_only'
-        self.n_word_dim = n_word_dim
-        self.n_holistic_filters = n_holistic_filters
-        self.n_per_dim_filters = n_per_dim_filters
-        self.filter_widths = filter_widths
-        self.ext_feats = ext_feats
-        self.attention = attention
-        self.wide_conv = wide_conv
+
+    def _add_layers(self):
         holistic_conv_layers = []
 
-        self.in_channels = n_word_dim if attention == 'none' else 2*n_word_dim
-
-        for ws in filter_widths:
+        for ws in self.filter_widths:
             if np.isinf(ws):
                 continue
 
-            padding = ws - 1 if wide_conv else 0
+            padding = ws - 1 if self.wide_conv else 0
 
             holistic_conv_layers.append(nn.Sequential(
-                nn.Conv1d(self.in_channels, n_holistic_filters, ws, padding=padding),
+                nn.Conv1d(self.in_channels, self.n_holistic_filters, ws, padding=padding),
                 nn.Tanh()
             ))
 
         self.holistic_conv_layers = nn.ModuleList(holistic_conv_layers)
-
-        # compute number of inputs to first hidden layer
-        n_feats = self._get_n_feats()
-
-        self.final_layers = nn.Sequential(
-            nn.Linear(n_feats, hidden_layer_units),
-            nn.Tanh(),
-            nn.Dropout(dropout),
-            nn.Linear(hidden_layer_units, num_classes),
-            nn.LogSoftmax(1)
-        )
 
     def _get_n_feats(self):
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + self.n_holistic_filters, 2

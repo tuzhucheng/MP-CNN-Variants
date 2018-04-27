@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -42,7 +41,7 @@ class MPCNNLiteMultiChannelAttention(MPCNNLiteMultichannel):
 
     def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         if self.attention == 'modified_euclidean':
-            attention_matrix = Variable(sent1.data.new(sent1.size(0), sent1.size(2), sent2.size(2)).fill_(1))
+            attention_matrix = sent1.new_ones(sent1.size(0), sent1.size(2), sent2.size(2))
             # non-vectorized
             for b in range(sent1.size(0)):
                 for i in range(sent1.size(2)):

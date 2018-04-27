@@ -79,7 +79,7 @@ class MSRVIDTrainer(Trainer):
                 output = self.model(sent1, sent2, left_out_ext_feats[i], sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
                 val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).item()
                 predict_classes = left_out_a[i].new_tensor(torch.arange(0, self.train_loader.dataset.NUM_CLASSES))\
-                                    .expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
+                                    .float().expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
 
                 predictions = (predict_classes * output.detach().exp()).sum(dim=1)
                 true_labels = (predict_classes * left_out_label[i].detach()).sum(dim=1)

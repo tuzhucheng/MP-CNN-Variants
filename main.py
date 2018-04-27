@@ -155,7 +155,7 @@ if __name__ == '__main__':
             all_sent_ids, all_predictions, all_labels = [], [], []
             all_sentences_1, all_sentences_2 = [], []
             for batch in loader:
-                sent_ids = batch.id.int().cpu().data.numpy()
+                sent_ids = batch.id.int().cpu().detach().numpy()
 
                 # Select embedding
                 sent1 = embedding(batch.sentence_1).transpose(1, 2)
@@ -164,8 +164,8 @@ if __name__ == '__main__':
                 predictions = model(sent1, sent2, batch.ext_feats)
                 labels = batch.label
                 predictions, labels = train_evaluator.get_final_prediction_and_label(predictions, labels)
-                predictions = predictions.cpu().data.numpy()
-                labels = labels.cpu().data.numpy()
+                predictions = predictions.cpu().detach().numpy()
+                labels = labels.cpu().detach().numpy()
                 all_sent_ids.extend(sent_ids)
                 all_predictions.extend(predictions)
                 all_labels.extend(labels)

@@ -33,9 +33,9 @@ class MPCNNHolisticPoolMaxOnly(MPCNNHolisticOnly):
                 }
                 continue
 
-            holistic_conv_out = self.holistic_conv_layers[ws - 1](sent)
+            holistic_conv_out_max = self.holistic_conv_layers_max[ws - 1](sent)
             block_a[ws] = {
-                'max': F.max_pool1d(holistic_conv_out, holistic_conv_out.size(2)).contiguous().view(-1, self.n_holistic_filters)
+                'max': F.max_pool1d(holistic_conv_out_max, holistic_conv_out_max.size(2)).contiguous().view(-1, self.n_holistic_filters)
             }
 
         return block_a

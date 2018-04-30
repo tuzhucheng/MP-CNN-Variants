@@ -80,7 +80,7 @@ class MPCNN(MPCNNVariantBase):
 
     def _get_n_feats(self):
         COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = 2 + self.n_holistic_filters, 2 + self.in_channels, 2
-        n_feats_h = 3 * len(self.filter_widths) * COMP_2_COMPONENTS
+        n_feats_h = 3 * self.n_holistic_filters * COMP_2_COMPONENTS
         n_feats_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
             3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
@@ -146,7 +146,7 @@ class MPCNN(MPCNNVariantBase):
                 pairwise_distances.append(dist)
 
             comparison_feats.append(torch.cat(pairwise_distances))
-            return torch.stack(comparison_feats, dim=1)
+        return torch.cat(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
         comparison_feats = []

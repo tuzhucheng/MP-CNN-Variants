@@ -31,13 +31,16 @@ class SICKEvaluator(Evaluator):
 
             del output
 
-        predictions = torch.cat(predictions).cpu().numpy()
-        true_labels = torch.cat(true_labels).cpu().numpy()
+        predictions = torch.cat(predictions)
+        true_labels = torch.cat(true_labels)
+        mse = F.mse_loss(predictions, true_labels).item()
         test_kl_div_loss /= len(batch.dataset.examples)
+        predictions = predictions.cpu().numpy()
+        true_labels = true_labels.cpu().numpy()
         pearson_r = pearsonr(predictions, true_labels)[0]
         spearman_r = spearmanr(predictions, true_labels)[0]
 
-        return [pearson_r, spearman_r, test_kl_div_loss], ['pearson_r', 'spearman_r', 'KL-divergence loss']
+        return [pearson_r, spearman_r, mse, test_kl_div_loss], ['pearson_r', 'spearman_r', 'mse', 'KL-divergence loss']
 
     def get_final_prediction_and_label(self, batch_predictions, batch_labels):
         num_classes = self.dataset_cls.NUM_CLASSES

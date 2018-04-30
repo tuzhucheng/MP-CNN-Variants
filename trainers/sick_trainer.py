@@ -19,7 +19,7 @@ class SICKTrainer(Trainer):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw, sent1_nonstatic, sent2_nonstatic)
-            loss = F.kl_div(output, batch.label)
+            loss = F.kl_div(output, batch.label, size_average=False)
             total_loss += loss.item()
             loss.backward()
             self.optimizer.step()
@@ -27,11 +27,11 @@ class SICKTrainer(Trainer):
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, min(batch_idx * self.batch_size, len(batch.dataset.examples)),
                     len(batch.dataset.examples),
-                    100. * batch_idx / (len(self.train_loader)), loss.item())
+                    100. * batch_idx / (len(self.train_loader)), loss.item() / len(batch))
                 )
 
         if self.use_tensorboard:
-            self.writer.add_scalar('sick/train/kl_div_loss', total_loss, epoch)
+            self.writer.add_scalar('sick/train/kl_div_loss', total_loss / len(self.train_loader.dataset.examples), epoch)
 
         return total_loss
 

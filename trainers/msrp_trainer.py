@@ -28,12 +28,11 @@ class MSRPTrainer(Trainer):
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, min(batch_idx * self.batch_size, len(batch.dataset.examples)),
                     len(batch.dataset.examples),
-                    100. * batch_idx / (len(self.train_loader)), loss.item())
+                    100. * batch_idx / (len(self.train_loader)), loss.item() / len(batch))
                 )
 
-        total_loss /= len(batch.dataset.examples)
         if self.use_tensorboard:
-            self.writer.add_scalar('sick/train/cross_entropy_loss', total_loss, epoch)
+            self.writer.add_scalar('sick/train/cross_entropy_loss', total_loss / len(self.train_loader.dataset.examples), epoch)
 
         return total_loss
 

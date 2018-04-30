@@ -36,7 +36,7 @@ class MSRVIDTrainer(Trainer):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
-            loss = F.kl_div(output, batch.label)
+            loss = F.kl_div(output, batch.label, size_average=False)
             total_loss += loss.item()
             loss.backward()
             self.optimizer.step()
@@ -44,13 +44,13 @@ class MSRVIDTrainer(Trainer):
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, min(batch_idx * self.batch_size, len(batch.dataset.examples)),
                     len(batch.dataset.examples),
-                    100. * batch_idx / (len(self.train_loader)), loss.item())
+                    100. * batch_idx / (len(self.train_loader)), loss.item() / len(batch))
                 )
 
         self.evaluate(self.train_evaluator, 'train')
 
         if self.use_tensorboard:
-            self.writer.add_scalar('msrvid/train/kl_div_loss', total_loss, epoch)
+            self.writer.add_scalar('msrvid/train/kl_div_loss', total_loss / len(self.train_loader.dataset.examples), epoch)
 
         return left_out_val_a, left_out_val_b, left_out_val_ext_feats, left_out_val_labels
 

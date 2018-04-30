@@ -27,7 +27,7 @@ class QATrainer(Trainer):
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                     epoch, min(batch_idx * self.batch_size, len(batch.dataset.examples)),
                     len(batch.dataset.examples),
-                    100. * batch_idx / (len(self.train_loader)), loss.item())
+                    100. * batch_idx / (len(self.train_loader)), loss.item() / len(batch))
                 )
 
         mean_average_precision, mean_reciprocal_rank, average_loss = self.evaluate(self.train_evaluator, 'train')

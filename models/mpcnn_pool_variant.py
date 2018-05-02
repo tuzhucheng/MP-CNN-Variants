@@ -85,16 +85,6 @@ class MPCNNPoolVariant(MPCNN):
 
         return block_a, block_b
 
-    def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
-        comparison_feats = []
-        for pool in self.pooling_funcs:
-            for ws in self.filter_widths:
-                x1 = sent1_block_a[ws][pool]
-                x2 = sent2_block_a[ws][pool]
-                comparison_feats.append(F.cosine_similarity(x1, x2))
-                comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.stack(comparison_feats, dim=1)
-
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b, sent1_nonstatic=None, sent2_nonstatic=None):
         comparison_feats = []
         ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]

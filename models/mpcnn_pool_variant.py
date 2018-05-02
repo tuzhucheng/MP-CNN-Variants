@@ -89,5 +89,5 @@ class MPCNNPoolVariant(MPCNN):
         return self._horizontal_comparison(sent1_block_a, sent2_block_a, pooling_types=self.pooling_funcs)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b, sent1_nonstatic=None, sent2_nonstatic=None):
-        return self._vertical_comparison(sent1_block_a, sent2_block_a, None, None, holistic_pooling_types=self.pooling_funcs,
+        return self._vertical_comparison(sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b, holistic_pooling_types=self.pooling_funcs,
                                             per_dim_pooling_types=self.pooling_funcs)

@@ -11,8 +11,8 @@ class MPCNNCompAbsDiff(MPCNN):
         self.arch = 'mpcnn_comp_abs_diff'
 
     def _get_n_feats(self):
-        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = self.n_holistic_filters, self.in_channels, self.n_holistic_filters
-        n_feats_h = 3 * (len(self.filter_widths) - 1) * COMP_2_COMPONENTS + 3
+        COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM, COMP_2_COMPONENTS = self.n_holistic_filters, self.in_channels, len(self.filter_widths)
+        n_feats_h = 3 * self.n_holistic_filters * COMP_2_COMPONENTS
         n_feats_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
             3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
@@ -27,10 +27,20 @@ class MPCNNCompAbsDiff(MPCNN):
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
         for pool in ('max', 'min', 'mean'):
+            regM1, regM2 = [], []
             for ws in self.filter_widths:
-                x1 = sent1_block_a[ws][pool]
-                x2 = sent2_block_a[ws][pool]
-                comparison_feats.append(torch.abs(x1 - x2))
+                x1 = sent1_block_a[ws][pool].unsqueeze(2)
+                x2 = sent2_block_a[ws][pool].unsqueeze(2)
+                if np.isinf(ws):
+                    x1 = x1.expand(-1, self.n_holistic_filters, -1)
+                    x2 = x2.expand(-1, self.n_holistic_filters, -1)
+                regM1.append(x1)
+                regM2.append(x2)
+
+            regM1 = torch.cat(regM1, dim=2)
+            regM2 = torch.cat(regM2, dim=2)
+
+            comparison_feats.append(torch.abs(regM1 - regM2).view(regM1.size(0), -1))
         return torch.cat(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):

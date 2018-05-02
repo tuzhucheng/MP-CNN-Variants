@@ -13,7 +13,7 @@ class MPCNNCompUnit1Only(MPCNN):
 
     def _get_n_feats(self):
         COMP_1_COMPONENTS_HOLISTIC, COMP_1_COMPONENTS_PER_DIM = 2 + self.n_holistic_filters, 2 + self.in_channels
-        n_feats_h = 3 * self.n_holistic_filters * COMP_1_COMPONENTS_HOLISTIC
+        n_feats_h = 3 * self.n_holistic_filters * (2 + len(self.filter_widths))
         n_feats_v = (
             # comparison units from holistic conv for min, max, mean pooling for non-infinite widths
             3 * ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +

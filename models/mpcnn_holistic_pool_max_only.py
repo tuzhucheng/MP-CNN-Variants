@@ -41,7 +41,7 @@ class MPCNNHolisticPoolMaxOnly(MPCNNHolisticOnly):
         return block_a
 
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
-        return self._horizontal_comparison(sent1_block_a, sent2_block_a, pooling_types=('max', ))
+        return self._vertical_comparison(sent1_block_a, sent2_block_a, None, None, holistic_pooling_types=('max', ), per_dim_pooling_types=tuple())
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []

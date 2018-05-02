@@ -40,6 +40,39 @@ class MPCNNVariantBase(nn.Module):
 
         return torch.cat(comparison_feats, dim=1)
 
+    def _vertical_comparison(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b, holistic_pooling_types=('max', 'min', 'mean'), per_dim_pooling_types=('max', 'min'), comparison_types=('cosine', 'euclidean', 'abs')):
+        comparison_feats = []
+        ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
+        for pool in holistic_pooling_types:
+            for ws1 in self.filter_widths:
+                x1 = sent1_block_a[ws1][pool]
+                for ws2 in self.filter_widths:
+                    x2 = sent2_block_a[ws2][pool]
+                    if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
+                        if 'cosine' in comparison_types:
+                            comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+                        if 'euclidean' in comparison_types:
+                            comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
+                        if 'abs' in comparison_types:
+                            comparison_feats.append(torch.abs(x1 - x2))
+
+        for pool in per_dim_pooling_types:
+            for ws in ws_no_inf:
+                oG_1B = sent1_block_b[ws][pool]
+                oG_2B = sent2_block_b[ws][pool]
+                for i in range(0, self.n_per_dim_filters):
+                    x1 = oG_1B[:, :, i]
+                    x2 = oG_2B[:, :, i]
+                    if 'cosine' in comparison_types:
+                        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+                    if 'euclidean' in comparison_types:
+                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
+                    if 'abs' in comparison_types:
+                        comparison_feats.append(torch.abs(x1 - x2))
+
+        return torch.cat(comparison_feats, dim=1)
+
+
     def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         sent1_transposed = sent1.transpose(1, 2)
         attention_dot = torch.bmm(sent1_transposed, sent2)

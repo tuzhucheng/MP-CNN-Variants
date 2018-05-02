@@ -33,7 +33,7 @@ class SMCNNWithComp(SMCNNVariantBase):
 
         # compute number of inputs to first hidden layer
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + n_filters, 2
-        n_feat_h = COMP_2_COMPONENTS
+        n_feat_h = self.n_filters * COMP_2_COMPONENTS
         n_feat_v = (
             # comparison units from holistic conv for max pooling for non-infinite widths
             COMP_1_COMPONENTS_HOLISTIC
@@ -59,11 +59,18 @@ class SMCNNWithComp(SMCNNVariantBase):
 
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
-        x1 = sent1_block_a[self.filter_width]['max']
-        x2 = sent2_block_a[self.filter_width]['max']
-        comparison_feats.append(F.cosine_similarity(x1, x2))
-        comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.stack(comparison_feats, dim=1)
+        regM1 = sent1_block_a[self.filter_width]['max'].unsqueeze(2)
+        regM2 = sent2_block_a[self.filter_width]['max'].unsqueeze(2)
+
+        comparison_feats.append(F.cosine_similarity(regM1, regM2, dim=2))
+
+        pairwise_distances = []
+        for x1, x2 in zip(regM1, regM2):
+            dist = F.pairwise_distance(x1, x2).view(1, -1)
+            pairwise_distances.append(dist)
+        comparison_feats.append(torch.cat(pairwise_distances))
+
+        return torch.cat(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []

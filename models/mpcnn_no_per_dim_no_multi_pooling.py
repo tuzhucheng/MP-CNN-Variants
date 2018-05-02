@@ -30,7 +30,7 @@ class MPCNNNoPerDimNoMultiPooling(MPCNN):
 
     def _get_n_feats(self):
         COMP_1_COMPONENTS_HOLISTIC, COMP_2_COMPONENTS = 2 + self.n_holistic_filters, 2
-        n_feats_h = len(self.filter_widths) * COMP_2_COMPONENTS
+        n_feats_h = self.n_holistic_filters * COMP_2_COMPONENTS
         n_feats_v = (
             # comparison units from holistic conv for max pooling for non-infinite widths
             ((len(self.filter_widths) - 1) ** 2) * COMP_1_COMPONENTS_HOLISTIC +
@@ -58,14 +58,7 @@ class MPCNNNoPerDimNoMultiPooling(MPCNN):
         return block_a
 
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
-        comparison_feats = []
-        for pool in ('max', ):
-            for ws in self.filter_widths:
-                x1 = sent1_block_a[ws][pool]
-                x2 = sent2_block_a[ws][pool]
-                comparison_feats.append(F.cosine_similarity(x1, x2))
-                comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.stack(comparison_feats, dim=1)
+        return self._horizontal_comparison(sent1_block_a, sent2_block_a, pooling_types=('max',))
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []

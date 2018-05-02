@@ -1,6 +1,4 @@
-import numpy as np
 import torch
-import torch.nn.functional as F
 
 from models.mpcnn import MPCNN
 
@@ -23,32 +21,6 @@ class MPCNNCompVertOnly(MPCNN):
         )
         n_feats = n_feats_v + self.ext_feats
         return n_feats
-
-    def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
-        comparison_feats = []
-        ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
-        for pool in ('max', 'min', 'mean'):
-            for ws1 in self.filter_widths:
-                x1 = sent1_block_a[ws1][pool]
-                for ws2 in self.filter_widths:
-                    x2 = sent2_block_a[ws2][pool]
-                    if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
-                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
-                        comparison_feats.append(torch.abs(x1 - x2))
-
-        for pool in ('max', 'min'):
-            for ws in ws_no_inf:
-                oG_1B = sent1_block_b[ws][pool]
-                oG_2B = sent2_block_b[ws][pool]
-                for i in range(0, self.n_per_dim_filters):
-                    x1 = oG_1B[:, :, i]
-                    x2 = oG_2B[:, :, i]
-                    comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
-                    comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
-                    comparison_feats.append(torch.abs(x1 - x2))
-
-        return torch.cat(comparison_feats, dim=1)
 
     def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None, sent1_nonstatic=None, sent2_nonstatic=None):
         # Attention

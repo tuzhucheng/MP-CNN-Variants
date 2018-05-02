@@ -29,23 +29,5 @@ class MPCNNCompEuclidean(MPCNN):
         return self._horizontal_comparison(sent1_block_a, sent2_block_a, comparison_types=('euclidean',))
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
-        comparison_feats = []
-        ws_no_inf = [w for w in self.filter_widths if not np.isinf(w)]
-        for pool in ('max', 'min', 'mean'):
-            for ws1 in self.filter_widths:
-                x1 = sent1_block_a[ws1][pool]
-                for ws2 in self.filter_widths:
-                    x2 = sent2_block_a[ws2][pool]
-                    if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
-
-        for pool in ('max', 'min'):
-            for ws in ws_no_inf:
-                oG_1B = sent1_block_b[ws][pool]
-                oG_2B = sent2_block_b[ws][pool]
-                for i in range(0, self.n_per_dim_filters):
-                    x1 = oG_1B[:, :, i]
-                    x2 = oG_2B[:, :, i]
-                    comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
-
-        return torch.cat(comparison_feats, dim=1)
+        return self._vertical_comparison(sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b,
+                                         comparison_types=('euclidean',))

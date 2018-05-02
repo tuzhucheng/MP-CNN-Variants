@@ -61,18 +61,8 @@ class MPCNNNoPerDimNoMultiPooling(MPCNN):
         return self._horizontal_comparison(sent1_block_a, sent2_block_a, pooling_types=('max',))
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
-        comparison_feats = []
-        for pool in ('max', ):
-            for ws1 in self.filter_widths:
-                x1 = sent1_block_a[ws1][pool]
-                for ws2 in self.filter_widths:
-                    x2 = sent2_block_a[ws2][pool]
-                    if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
-                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
-                        comparison_feats.append(torch.abs(x1 - x2))
-
-        return torch.cat(comparison_feats, dim=1)
+        return self._vertical_comparison(sent1_block_a, sent2_block_a, None, None, holistic_pooling_types=('max',),
+                                         per_dim_pooling_types=tuple())
 
     def forward(self, sent1, sent2, ext_feats=None, word_to_doc_count=None, raw_sent1=None, raw_sent2=None, sent1_nonstatic=None, sent2_nonstatic=None):
         # Attention

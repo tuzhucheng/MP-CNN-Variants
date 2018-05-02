@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,6 +8,37 @@ class MPCNNVariantBase(nn.Module):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
         super(MPCNNVariantBase, self).__init__()
+
+    def _horizontal_comparison(self, sent1_block_a, sent2_block_a, pooling_types=('max', 'min', 'mean'), comparison_types=('cosine', 'euclidean')):
+        comparison_feats = []
+        for pool in pooling_types:
+            regM1, regM2 = [], []
+            for ws in self.filter_widths:
+                x1 = sent1_block_a[ws][pool].unsqueeze(2)
+                x2 = sent2_block_a[ws][pool].unsqueeze(2)
+                if np.isinf(ws):
+                    x1 = x1.expand(-1, self.n_holistic_filters, -1)
+                    x2 = x2.expand(-1, self.n_holistic_filters, -1)
+                regM1.append(x1)
+                regM2.append(x2)
+
+            regM1 = torch.cat(regM1, dim=2)
+            regM2 = torch.cat(regM2, dim=2)
+
+            if 'cosine' in comparison_types:
+                comparison_feats.append(F.cosine_similarity(regM1, regM2, dim=2))
+
+            if 'euclidean' in comparison_types:
+                pairwise_distances = []
+                for x1, x2 in zip(regM1, regM2):
+                    dist = F.pairwise_distance(x1, x2).view(1, -1)
+                    pairwise_distances.append(dist)
+                comparison_feats.append(torch.cat(pairwise_distances))
+
+            if 'abs' in comparison_types:
+                comparison_feats.append(torch.abs(regM1 - regM2).view(regM1.size(0), -1))
+
+        return torch.cat(comparison_feats, dim=1)
 
     def concat_attention(self, sent1, sent2, word_to_doc_count=None, raw_sent1=None, raw_sent2=None):
         sent1_transposed = sent1.transpose(1, 2)

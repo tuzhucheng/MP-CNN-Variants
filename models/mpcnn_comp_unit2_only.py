@@ -26,14 +26,7 @@ class MPCNNCompUnit2Only(MPCNN):
         return n_feats
 
     def _algo_1_horiz_comp(self, sent1_block_a, sent2_block_a):
-        comparison_feats = []
-        for pool in ('max', 'min', 'mean'):
-            for ws in self.filter_widths:
-                x1 = sent1_block_a[ws][pool]
-                x2 = sent2_block_a[ws][pool]
-                comparison_feats.append(F.cosine_similarity(x1, x2))
-                comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.stack(comparison_feats, dim=1)
+        return self._horizontal_comparison(sent1_block_a, sent2_block_a, comparison_types=('cosine', 'euclidean'))
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a, sent1_block_b, sent2_block_b):
         comparison_feats = []

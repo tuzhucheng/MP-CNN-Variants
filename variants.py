@@ -10,6 +10,7 @@ from models.mpcnn_pool_max_only import MPCNNPoolMaxOnly
 from models.mpcnn_pool_mean_sym import MPCNNPoolMeanSymmetrical
 from models.mpcnn_pool_no_mean_sym import MPCNNPoolNoMeanSymmetrical
 from models.mpcnn_comp_horiz_only import MPCNNCompHorizOnly
+from models.mpcnn_comp_horiz_abs_only_vert_u1 import MPCNNCompHorizAbsOnlyVertU1
 from models.mpcnn_comp_vert_only import MPCNNCompVertOnly
 from models.mpcnn_comp_vert_holistic_only import MPCNNCompVertHolisticOnly
 from models.mpcnn_comp_unit1_only import MPCNNCompUnit1Only
@@ -42,6 +43,7 @@ class VariantFactory(object):
                 'mpcnn_pool_mean_sym': MPCNNPoolMeanSymmetrical,
                 'mpcnn_pool_no_mean_sym': MPCNNPoolNoMeanSymmetrical,
                 'mpcnn_comp_horiz_only': MPCNNCompHorizOnly,
+                'mpcnn_comp_horiz_abs_only_vert_u1': MPCNNCompHorizAbsOnlyVertU1,
                 'mpcnn_comp_vert_only': MPCNNCompVertOnly,
                 'mpcnn_comp_vert_holistic_only': MPCNNCompVertHolisticOnly,
                 'mpcnn_comp_unit1_only': MPCNNCompUnit1Only,

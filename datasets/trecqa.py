@@ -26,7 +26,7 @@ class TRECQA(CastorPairDataset):
         super(TRECQA, self).__init__(path)
 
     @classmethod
-    def splits(cls, path, train='train-all', validation='raw-dev', test='raw-test', **kwargs):
+    def splits(cls, path, train='train-all', validation='clean-dev', test='clean-test', **kwargs):
         return super(TRECQA, cls).splits(path, train=train, validation=validation, test=test, **kwargs)
 
     @classmethod

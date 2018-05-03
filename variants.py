@@ -17,7 +17,8 @@ from models.mpcnn_comp_unit2_only import MPCNNCompUnit2Only
 from models.mpcnn_holistic_pool_max_only import MPCNNHolisticPoolMaxOnly
 from models.mpcnn_single_window import MPCNNSingleWindow
 from models.mpcnn_single_window_with_inf import MPCNNSingleWindowWithInf
-from models.mpcnn_no_per_dim_no_multi_pooling import MPCNNNoPerDimNoMultiPooling
+from models.mpcnn_no_per_dim_no_multi_pooling_v3 import MPCNNNoPerDimNoMultiPoolingV3
+from models.mpcnn_no_per_dim_no_multi_pooling_v4 import MPCNNNoPerDimNoMultiPoolingV4
 from models.mpcnn_lite_multichannel import MPCNNLiteMultichannel
 from models.mpcnn_lite_multichannel_attention import MPCNNLiteMultiChannelAttention
 
@@ -44,7 +45,8 @@ class VariantFactory(object):
                 'mpcnn_holistic_pool_max_only': MPCNNHolisticPoolMaxOnly,
                 'mpcnn_single_window': MPCNNSingleWindow,
                 'mpcnn_single_window_with_inf': MPCNNSingleWindowWithInf,
-                'mpcnn_no_per_dim_no_multi_pooling': MPCNNNoPerDimNoMultiPooling,
+                'mpcnn_no_per_dim_no_multi_pooling_v3': MPCNNNoPerDimNoMultiPoolingV3,
+                'mpcnn_no_per_dim_no_multi_pooling_v4': MPCNNNoPerDimNoMultiPoolingV4,
                 'mpcnn_lite_multichannel': MPCNNLiteMultichannel,
                 'mpcnn_lite_multichannel_attention': MPCNNLiteMultiChannelAttention
             }

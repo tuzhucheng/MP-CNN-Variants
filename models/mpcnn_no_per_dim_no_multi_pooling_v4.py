@@ -6,11 +6,11 @@ import torch.nn.functional as F
 from models.mpcnn_variant_base import MPCNNVariantBase
 
 
-class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
+class MPCNNNoPerDimNoMultiPoolingV4(MPCNNVariantBase):
 
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv):
-        super(MPCNNNoPerDimNoMultiPooling, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
-        self.arch = 'mpcnn_no_per_dim_no_multi_pooling'  # aka MP-CNN Lite
+        super(MPCNNNoPerDimNoMultiPoolingV4, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv)
+        self.arch = 'mpcnn_no_per_dim_no_multi_pooling_v4'  # aka MP-CNN Lite
         self.n_word_dim = n_word_dim
         self.n_holistic_filters = n_holistic_filters
         self.n_per_dim_filters = n_per_dim_filters
@@ -77,10 +77,9 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
             for ws in self.filter_widths:
                 x1 = sent1_block_a[ws][pool]
                 x2 = sent2_block_a[ws][pool]
-                batch_size = x1.size()[0]
-                comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
+                comparison_feats.append(F.cosine_similarity(x1, x2))
                 comparison_feats.append(F.pairwise_distance(x1, x2))
-        return torch.cat(comparison_feats, dim=1)
+        return torch.stack(comparison_feats, dim=1)
 
     def _algo_2_vert_comp(self, sent1_block_a, sent2_block_a):
         comparison_feats = []
@@ -88,12 +87,11 @@ class MPCNNNoPerDimNoMultiPooling(MPCNNVariantBase):
         for pool in ('max', ):
             for ws1 in self.filter_widths:
                 x1 = sent1_block_a[ws1][pool]
-                batch_size = x1.size()[0]
                 for ws2 in self.filter_widths:
                     x2 = sent2_block_a[ws2][pool]
                     if (not np.isinf(ws1) and not np.isinf(ws2)) or (np.isinf(ws1) and np.isinf(ws2)):
-                        comparison_feats.append(F.cosine_similarity(x1, x2).contiguous().view(batch_size, 1))
-                        comparison_feats.append(F.pairwise_distance(x1, x2))
+                        comparison_feats.append(F.cosine_similarity(x1, x2).unsqueeze(1))
+                        comparison_feats.append(F.pairwise_distance(x1, x2).unsqueeze(1))
                         comparison_feats.append(torch.abs(x1 - x2))
 
         return torch.cat(comparison_feats, dim=1)

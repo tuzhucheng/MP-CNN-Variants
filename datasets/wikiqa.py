@@ -48,4 +48,4 @@ class WikiQA(CastorPairDataset):
 
         cls.TEXT_FIELD.build_vocab(train, validation, test, vectors=vectors)
 
-        return BucketIterator.splits((train, validation, test), batch_size=batch_size, repeat=False, shuffle=shuffle, device=device)
+        return BucketIterator.splits((train, validation, test), batch_size=batch_size, repeat=False, shuffle=shuffle, sort_within_batch=True, device=device)

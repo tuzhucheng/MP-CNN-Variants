@@ -36,49 +36,37 @@ class MPCNNDatasetFactory(object):
         if dataset_name == 'sick':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'sick/')
             train_loader, dev_loader, test_loader = SICK.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = SICK.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(SICK.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(SICK.TEXT_FIELD.vocab.vectors)
             return SICK, embedding, train_loader, test_loader, dev_loader
         if dataset_name == 'sts':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'sts/')
             train_loader, dev_loader, test_loader = STS.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = STS.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(STS.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(STS.TEXT_FIELD.vocab.vectors)
             return STS, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrp':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'msrp/')
             train_loader, dev_loader, test_loader = MSRP.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = MSRP.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(MSRP.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(MSRP.TEXT_FIELD.vocab.vectors)
             return MSRP, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'msrvid':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'msrvid/')
             dev_loader = None
             train_loader, test_loader = MSRVID.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = MSRVID.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(MSRVID.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(MSRVID.TEXT_FIELD.vocab.vectors)
             return MSRVID, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'trecqa':
             if not os.path.exists(trec_eval_path):
                 raise FileNotFoundError('TrecQA requires the trec_eval tool to run. Please run get_trec_eval.sh inside utils/ (as working directory) before continuing.')
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'TrecQA/')
             train_loader, dev_loader, test_loader = TRECQA.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = TRECQA.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(TRECQA.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(TRECQA.TEXT_FIELD.vocab.vectors)
             return TRECQA, embedding, train_loader, test_loader, dev_loader
         elif dataset_name == 'wikiqa':
             if not os.path.exists(trec_eval_path):
                 raise FileNotFoundError('TrecQA requires the trec_eval tool to run. Please run get_trec_eval.sh inside Castor/utils (as working directory) before continuing.')
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'data', 'WikiQA/')
             train_loader, dev_loader, test_loader = WikiQA.iters(dataset_root, word_vectors_file, word_vectors_dir, batch_size, device=device, unk_init=UnknownWordVecCache.unk)
-            embedding_dim = WikiQA.TEXT_FIELD.vocab.vectors.size()
-            embedding = nn.Embedding(embedding_dim[0], embedding_dim[1])
-            embedding.weight = nn.Parameter(WikiQA.TEXT_FIELD.vocab.vectors)
+            embedding = nn.Embedding.from_pretrained(WikiQA.TEXT_FIELD.vocab.vectors)
             return WikiQA, embedding, train_loader, test_loader, dev_loader
         else:
             raise ValueError('{} is not a valid dataset.'.format(dataset_name))

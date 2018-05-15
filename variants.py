@@ -24,6 +24,7 @@ from models.mpcnn_no_inf import MPCNNNoInf
 from models.mpcnn_single_window import MPCNNSingleWindow
 from models.mpcnn_single_window_with_inf import MPCNNSingleWindowWithInf
 from models.mpcnn_no_per_dim_no_multi_pooling import MPCNNNoPerDimNoMultiPooling
+from models.mpcnn_no_per_dim_no_multi_pooling_no_horiz import MPCNNNoPerDimNoMultiPoolingNoHoriz
 from models.mpcnn_lite_multichannel import MPCNNLiteMultichannel
 from models.mpcnn_lite_multichannel_attention import MPCNNLiteMultiChannelAttention
 
@@ -57,6 +58,7 @@ class VariantFactory(object):
                 'mpcnn_single_window': MPCNNSingleWindow,
                 'mpcnn_single_window_with_inf': MPCNNSingleWindowWithInf,
                 'mpcnn_no_per_dim_no_multi_pooling': MPCNNNoPerDimNoMultiPooling,
+                'mpcnn_no_per_dim_no_multi_pooling_no_horiz': MPCNNNoPerDimNoMultiPoolingNoHoriz,
                 'mpcnn_lite_multichannel': MPCNNLiteMultichannel,
                 'mpcnn_lite_multichannel_attention': MPCNNLiteMultiChannelAttention
             }

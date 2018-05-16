@@ -9,7 +9,7 @@ import task_queue.tasks as tasks
 
 def run(group, arch_group, datasets, count):
     dropout = 0
-    device = 1
+    device = 2
     for _ in range(count):
         lr = round(10 ** uniform(-4, -3), 5)
         reg = round(10 ** uniform(-5, -3), 7)
@@ -20,7 +20,7 @@ def run(group, arch_group, datasets, count):
         elif arch_group == 'pool':
             archs = ['mpcnn', 'mpcnn_pool_max_only', 'mpcnn_pool_mean_sym', 'mpcnn_pool_no_mean_sym']
         elif arch_group == 'comp':
-            archs = ['mpcnn', 'mpcnn_comp_horiz_only', 'mpcnn_comp_vert_only', 'mpcnn_comp_unit1_only', 'mpcnn_comp_unit2_only']
+            archs = ['mpcnn', 'mpcnn_comp_horiz_only', 'mpcnn_comp_vert_only', 'mpcnn_comp_vert_holistic_only']
         elif arch_group == 'comp-dist':
             archs = ['mpcnn', 'mpcnn_comp_cosine', 'mpcnn_comp_euclidean', 'mpcnn_comp_abs_diff']
         elif arch_group == 'conv-pool':
@@ -47,9 +47,9 @@ def run(group, arch_group, datasets, count):
         for arch in archs:
             for dataset in datasets:
                 if dataset in ('trecqa', 'wikiqa'):
-                    train_extract = ('stderr', r'INFO\s+-\s+train\s+(?P<cross_entropy_loss>\d+\.\d+)\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)')
-                    dev_extract = ('stderr', r'INFO\s+-\s+dev\s+(?P<cross_entropy_loss>\d+\.\d+)\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)')
-                    test_extract = ('stderr', r'INFO\s+-\s+test\s+(?P<cross_entropy_loss>\d+\.\d+)\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)')
+                    train_extract = ('stderr', r'INFO\s+-\s+train\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)\s+(?P<cross_entropy_loss>\d+\.\d+)')
+                    dev_extract = ('stderr', r'INFO\s+-\s+dev\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)\s+(?P<cross_entropy_loss>\d+\.\d+)')
+                    test_extract = ('stderr', r'INFO\s+-\s+test\s+(?P<map>\d+\.\d+)\s+(?P<mrr>\d+\.\d+)\s+(?P<cross_entropy_loss>\d+\.\d+)')
                 elif dataset in ('sick', ):
                     train_extract = ('stderr', r'INFO\s+-\s+train\s+(?P<pearson>\d+\.\d+)\s+(?P<spearman>\d+\.\d+)\s+(?P<kl_div>\d+\.\d+)')
                     dev_extract = ('stderr', r'INFO\s+-\s+dev\s+(?P<pearson>\d+\.\d+)\s+(?P<spearman>\d+\.\d+)\s+(?P<kl_div>\d+\.\d+)')
@@ -58,13 +58,16 @@ def run(group, arch_group, datasets, count):
                 dropout = 0
                 eps = 1e-8
                 if dataset == 'trecqa':
-                    gpu = 1
+                    prob = uniform(0, 1)
+                    gpu = 1 if prob < 0.5 else 2
                     epochs = 5
                 elif dataset == 'wikiqa':
-                    gpu = 1
+                    prob = uniform(0, 1)
+                    gpu = 1 if prob < 0.5 else 2
                     epochs = 10
                 elif dataset == 'sick':
-                    gpu = 1
+                    prob = uniform(0, 1)
+                    gpu = 1 if prob < 0.5 else 2
                     epochs = 19
 
                 model = f"arch_{arch}_dataset_{dataset}_seed_{randid}"

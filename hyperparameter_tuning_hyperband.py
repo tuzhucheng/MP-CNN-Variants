@@ -50,7 +50,7 @@ def run_and_return_eval(num_iters, expt_group, arch, dataset, log_interval, para
     dropout = params['dropout']
 
     model_name = f"lr_{lr}_f_{filters}_reg_{reg}_id_{randid}.castor"
-    command = f"python /u/z3tu/castorini/MP-CNN-Variants/main.py /u/z3tu/castorini/MP-CNN-Variants/saved_models/{model_name} --arch {arch} --dataset {dataset} --log-interval {log_interval} --epochs {num_iters} --device {gpu} --dropout {dropout} --holistic-filters {filters} --max-window-size {max_window_size} --batch-size 64 --lr {lr} --regularization {reg}"
+    command = f"python main.py saved_models/{model_name} --arch {arch} --dataset {dataset} --log-interval {log_interval} --epochs {num_iters} --device {gpu} --dropout {dropout} --holistic-filters {filters} --max-window-size {max_window_size} --batch-size 64 --lr {lr} --regularization {reg}"
 
     print("Running: " + command)
     res_future = tasks.run_model.apply_async(args=[command.split(' '),

@@ -6,7 +6,7 @@ Here is the MP-CNN paper:
 
 * Hua He, Kevin Gimpel, and Jimmy Lin. [Multi-Perspective Sentence Similarity Modeling with Convolutional Neural Networks](http://aclweb.org/anthology/D/D15/D15-1181.pdf). *Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP 2015)*, pages 1576-1586.
 
-The SICK and MSRVID datasets are available in https://github.com/castorini/data, as well as the GloVe word embeddings.
+The datasets are available in https://github.com/castorini/data, as well as the GloVe word embeddings.
 
 Directory layout should be like this:
 ```
@@ -21,39 +21,37 @@ Directory layout should be like this:
 │   └── GloVe/
 ```
 
+Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour to allow for fair comparison in the results reported below.
+
 ## SICK Dataset
 
 To run MP-CNN on the SICK dataset mimicking the original paper as closely as possible, use the following command:
 
 ```
-python main.py mpcnn.sick.model --dataset sick --epochs 19 --epsilon 1e-7 --dropout 0
+python main.py mpcnn.sick.model --dataset sick --epochs 19 --dropout 0 --lr 0.0005
 ```
 
-Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
+| Implementation and config        | Pearson's r    | Spearman's p    | MSE    |
+| -------------------------------- |:--------------:|:---------------:|:------:|
+| Paper                            | 0.8686         | 0.8047          | 0.2606 |
+| PyTorch using above config       | 0.8738         | 0.8116          | 0.2414 |
 
-You should be able to obtain Pearson's p to be 0.8790 and Spearman's r to be 0.8166, comparable to the results obtained in the paper (0.8686 and 0.8047).
-
-## MSRVID Dataset
-
-To run MP-CNN on the MSRVID dataset, use the following command:
-```
-python main.py mpcnn.msrvid.model --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
-```
-
-You should be able to obtain Pearson's p to be 0.9104, for reference the performance in the paper is 0.9090.
 
 ## TrecQA Dataset
 
-To run MP-CNN on TrecQA, you first need to the `get_trec_eval.sh` script in `utils`.
+To run MP-CNN on TrecQA, you first need to run the `get_trec_eval.sh` script in `utils`.
 
 Then, you can run:
 ```
-python main.py mpcnn.trecqa.model --dataset trecqa --epochs 5 --regularization 0.0005 --dropout 0.5 --eps 0.1
+python main.py mpcnn.trecqa.model --arch mpcnn --dataset trecqa --epochs 5 --holistic-filters 200 --lr 0.00018 --regularization 0.0006405 --dropout 0
 ```
 
-You should be able to get a map (mean average precision) of 0.776 and mrr (mean reciprocal rank) of 0.8065.
+| Implementation and config        | map    | mrr    |
+| -------------------------------- |:------:|:------:|
+| Paper                            | 0.762  | 0.854  |
+| PyTorch using above config       | 0.771  | 0.823  |
 
-These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
+The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
 
 ## WikiQA Dataset
 
@@ -61,28 +59,33 @@ You also need `trec_eval` for this dataset, similar to TrecQA.
 
 Then, you can run:
 ```
-python main.py mpcnn.wikiqa.model --epochs 10 --dataset wikiqa --batch-size 64 --lr 0.0004 --regularization 0.02
+python main.py mpcnn.wikiqa.model --arch mpcnn --dataset wikiqa --epochs 5 --holistic-filters 100 --lr 0.00042 --regularization 0.0001683 --dropout 0
 ```
 | Implementation and config        | map    | mrr    |
 | -------------------------------- |:------:|:------:|
 | Paper                            | 0.693  | 0.709  |
-| PyTorch using above config       | 0.692  | 0.705 |
+| PyTorch using above config       | 0.709  | 0.721  |
 
 The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
 
-These are not the optimal hyperparameters but they are decent. This README will be updated with more optimal hyperparameters and results in the future.
+## Other Datasets
 
-## MSRP Dataset
+### MSRVID
+
+To run MP-CNN on the MSRVID dataset, use the following command:
+```
+python main.py mpcnn.msrvid.model --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
+```
+
+You should be able to obtain Pearson's p to be 0.8989 (untuned), for reference the performance in the paper is 0.9090.
+
+### MSRP Dataset
 
 To run MP-CNN on the MSRP dataset, use the following command:
 
 ```
 python main.py mpcnn.msrp.model --dataset msrp --epochs 15
 ```
-
-Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour.
-
-You should be able to obtain accuracy to be 0.7617 and f1 score to be 0.8221.
 
 To see all options available, use
 ```
@@ -95,4 +98,4 @@ The model is written in PyTorch. We optionally make use of https://github.com/la
 
 ## Experimental
 
-There are some scripts in this repo for hyperparameter optimization. I made a custom library for helping me to do this. However, this library is not yet in a shape to be open-sourced. Hence, the imports in `hyperparameter_tuning_{random,hyperband}.py` and `utils/hyperband.py` will not work for you at the moment.
+There are some scripts in this repo for hyperparameter optimization using [watermill](https://github.com/tuzhucheng/watermill) with some hacks since the library is in alpha. Hence, the imports in `hyperparameter_tuning_{random,hyperband}.py` and `utils/hyperband.py` will not work for you at the moment.

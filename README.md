@@ -99,3 +99,16 @@ The model is written in PyTorch. We optionally make use of https://github.com/la
 ## Experimental
 
 There are some scripts in this repo for hyperparameter optimization using [watermill](https://github.com/tuzhucheng/watermill) with some hacks since the library is in alpha. Hence, the imports in `hyperparameter_tuning_{random,hyperband}.py` and `utils/hyperband.py` will not work for you at the moment.
+
+## References
+
+For results, please see my Master's thesis [here](https://uwspace.uwaterloo.ca/handle/10012/13297):
+
+```
+@mastersthesis{tu2018experimental,
+  title={An Experimental Analysis of Multi-Perspective Convolutional Neural Networks},
+  author={Tu, Zhucheng},
+  year={2018},
+  school={University of Waterloo}
+}
+```

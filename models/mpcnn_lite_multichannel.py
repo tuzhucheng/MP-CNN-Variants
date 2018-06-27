@@ -11,7 +11,7 @@ class MPCNNLiteMultichannel(MPCNN):
     def __init__(self, n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, attention, wide_conv, nonstatic):
         self.nonstatic = nonstatic
         super(MPCNNLiteMultichannel, self).__init__(n_word_dim, n_holistic_filters, n_per_dim_filters, filter_widths, hidden_layer_units, num_classes, dropout, ext_feats, 'none', wide_conv)  # No attention
-        self.arch = 'mpcnn_lite_multichannel'  # aka MP-CNN Lite
+        self.arch = 'mpcnn_lite_multichannel'
 
     def _add_layers(self):
         holistic_conv_layers = []

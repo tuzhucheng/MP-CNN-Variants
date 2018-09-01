@@ -13,7 +13,7 @@ Directory layout should be like this:
 ├── MP-CNN-Variants
 │   ├── README.md
 │   ├── ...
-├── data
+├── Castor-data
 │   ├── README.md
 │   ├── ...
 │   ├── msrvid/
@@ -21,7 +21,7 @@ Directory layout should be like this:
 │   └── GloVe/
 ```
 
-Note the original paper doesn't use dropout, so dropout = 0 mimics this behaviour to allow for fair comparison in the results reported below.
+Note the original paper doesn't use dropout, so dropout=0 mimics this behaviour to allow for fair comparison in the results reported below.
 
 ## SICK Dataset
 

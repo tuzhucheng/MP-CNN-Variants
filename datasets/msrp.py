@@ -10,7 +10,6 @@ from torchtext.data.dataset import Dataset
 from torchtext.data.example import Example
 from torchtext.data.field import Field, RawField
 from torchtext.data.iterator import BucketIterator
-from torchtext.data.pipeline import Pipeline
 from torchtext.vocab import Vectors
 
 from datasets.idf_utils import get_pairwise_word_to_doc_freq
@@ -22,7 +21,7 @@ class MSRP(Dataset):
     EXT_FEATS = 6
     ID_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it
-    EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
+    EXT_FEATS_FIELD = Field(dtype=torch.float32, use_vocab=False, batch_first=True, tokenize=lambda x: x)
     LABEL_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     RAW_TEXT_FIELD = RawField()
 
@@ -145,13 +144,13 @@ class MSRP(Dataset):
         return split_results
 
     @classmethod
-    def iters(cls, path, vectors_name, vectors_cache, batch_size=64, shuffle=True, device=0, vectors=None, unk_init=torch.Tensor.zero_):
+    def iters(cls, path, vectors_name, vectors_cache, device, batch_size=64, shuffle=True, vectors=None, unk_init=torch.Tensor.zero_):
         """
         :param path: directory containing train, test, dev files
         :param vectors_name: name of word vectors file
         :param vectors_cache: path to word vectors file
+        :param device: PyTorch device
         :param batch_size: batch size
-        :param device: GPU device
         :param vectors: custom vectors - either predefined torchtext vectors or your own custom Vector classes
         :param unk_init: function used to generate vector for OOV words
         :return:

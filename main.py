@@ -84,7 +84,7 @@ if __name__ == '__main__':
     logger.info(pprint.pformat(vars(args)))
 
     dataset_cls, embedding, train_loader, test_loader, dev_loader \
-        = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, args.device)
+        = MPCNNDatasetFactory.get_dataset(args.dataset, args.word_vectors_dir, args.word_vectors_file, args.batch_size, device)
 
     if args.multichannel:
         nonstatic_embedding = copy.deepcopy(embedding)

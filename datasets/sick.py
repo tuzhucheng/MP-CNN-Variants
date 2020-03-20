@@ -30,8 +30,8 @@ class SICK(CastorPairDataset):
     NUM_CLASSES = 5
     ID_FIELD = Field(sequential=False, use_vocab=False, batch_first=True)
     TEXT_FIELD = Field(batch_first=True, tokenize=lambda x: x)  # tokenizer is identity since we already tokenized it to compute external features
-    EXT_FEATS_FIELD = Field(tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, tokenize=lambda x: x)
-    LABEL_FIELD = Field(sequential=False, tensor_type=torch.FloatTensor, use_vocab=False, batch_first=True, postprocessing=Pipeline(get_class_probs))
+    EXT_FEATS_FIELD = Field(dtype=torch.float32, use_vocab=False, batch_first=True, tokenize=lambda x: x)
+    LABEL_FIELD = Field(sequential=False, dtype=torch.float32, use_vocab=False, batch_first=True, postprocessing=Pipeline(get_class_probs))
     RAW_TEXT_FIELD = RawField()
 
     @staticmethod
@@ -49,13 +49,13 @@ class SICK(CastorPairDataset):
         return super(SICK, cls).splits(path, train=train, validation=validation, test=test, **kwargs)
 
     @classmethod
-    def iters(cls, path, vectors_name, vectors_cache, batch_size=64, shuffle=True, device=0, vectors=None, unk_init=torch.Tensor.zero_):
+    def iters(cls, path, vectors_name, vectors_cache, device, batch_size=64, shuffle=True, vectors=None, unk_init=torch.Tensor.zero_):
         """
         :param path: directory containing train, test, dev files
         :param vectors_name: name of word vectors file
         :param vectors_cache: path to word vectors file
+        :param device: PyTorch device
         :param batch_size: batch size
-        :param device: GPU device
         :param vectors: custom vectors - either predefined torchtext vectors or your own custom Vector classes
         :param unk_init: function used to generate vector for OOV words
         :return:

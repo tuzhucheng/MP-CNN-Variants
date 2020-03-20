@@ -5,6 +5,6 @@ saved_models/
 *.swp
 *.pyc
 
-v9.0.5.tar.gz
-trec_eval-9.0.5
+v9.0.7.tar.gz
+trec_eval-9.0.7
 *_predictions.csv

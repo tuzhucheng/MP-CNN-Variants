@@ -23,6 +23,8 @@ Directory layout should be like this:
 
 Note the original paper doesn't use dropout, so dropout=0 mimics this behaviour to allow for fair comparison in the results reported below.
 
+To visualize the training process, just add `--tensorboard` to use TensorBoard.
+
 ## SICK Dataset
 
 To run MP-CNN on the SICK dataset mimicking the original paper as closely as possible, use the following command:
@@ -34,7 +36,7 @@ python main.py mpcnn.sick.model --dataset sick --epochs 19 --dropout 0 --lr 0.00
 | Implementation and config        | Pearson's r    | Spearman's p    | MSE    |
 | -------------------------------- |:--------------:|:---------------:|:------:|
 | Paper                            | 0.8686         | 0.8047          | 0.2606 |
-| PyTorch using above config       | 0.8738         | 0.8116          | 0.2414 |
+| PyTorch using above config       | 0.8692         | 0.8145          | 0.2520 |
 
 
 ## TrecQA Dataset
@@ -49,7 +51,7 @@ python main.py mpcnn.trecqa.model --arch mpcnn --dataset trecqa --epochs 5 --hol
 | Implementation and config        | map    | mrr    |
 | -------------------------------- |:------:|:------:|
 | Paper                            | 0.762  | 0.854  |
-| PyTorch using above config       | 0.771  | 0.823  |
+| PyTorch using above config       | 0.774  | 0.836  |
 
 The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
 
@@ -59,12 +61,12 @@ You also need `trec_eval` for this dataset, similar to TrecQA.
 
 Then, you can run:
 ```
-python main.py mpcnn.wikiqa.model --arch mpcnn --dataset wikiqa --epochs 5 --holistic-filters 100 --lr 0.00042 --regularization 0.0001683 --dropout 0
+python main.py mpcnn.wikiqa.model --arch mpcnn --dataset wikiqa --epochs 5 --holistic-filters 100 --lr 0.0001 --regularization 0.0002 --dropout 0
 ```
 | Implementation and config        | map    | mrr    |
 | -------------------------------- |:------:|:------:|
 | Paper                            | 0.693  | 0.709  |
-| PyTorch using above config       | 0.709  | 0.721  |
+| PyTorch using above config       | 0.699  | 0.714  |
 
 The paper results are reported in [Noise-Contrastive Estimation for Answer Selection with Deep Neural Networks](https://dl.acm.org/citation.cfm?id=2983872).
 
@@ -74,10 +76,10 @@ The paper results are reported in [Noise-Contrastive Estimation for Answer Selec
 
 To run MP-CNN on the MSRVID dataset, use the following command:
 ```
-python main.py mpcnn.msrvid.model --dataset msrvid --batch-size 16 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.0025
+python main.py mpcnn.msrvid.model --dataset msrvid --batch-size 16 --lr 0.0005 --epsilon 1e-7 --epochs 32 --dropout 0 --regularization 0.001
 ```
 
-You should be able to obtain Pearson's p to be 0.8989 (untuned), for reference the performance in the paper is 0.9090.
+You should be able to obtain Pearson's p to be 0.8980 (untuned), for reference the performance in the paper is 0.9090.
 
 ### MSRP Dataset
 
@@ -91,10 +93,6 @@ To see all options available, use
 ```
 python main.py --help
 ```
-
-## Dependencies
-
-The model is written in PyTorch. We optionally make use of https://github.com/lanpa/tensorboard-pytorch to connect to [TensorBoard](https://github.com/tensorflow/tensorboard) to visualize the training process. Just add `--tensorboard` to enable.
 
 ## Experimental
 

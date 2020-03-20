@@ -12,7 +12,7 @@ def get_map_mrr(qids, predictions, labels, device=0):
     :param qids: query ids of predictions and labels
     :param predictions: iterable of predictions made by the models
     :param labels: iterable of labels of the dataset
-    :param device: device (GPU index or -1 for CPU) for identification purposes only
+    :param device: device for identification purposes only
     """
     qrel_fname = 'trecqa_{}_{}.qrel'.format(time.time(), device)
     results_fname = 'trecqa_{}_{}.results'.format(time.time(), device)
@@ -24,7 +24,7 @@ def get_map_mrr(qids, predictions, labels, device=0):
             f1.write(qrel_template.format(qid=qid, docno=docno, rel=actual))
             f2.write(results_template.format(qid=qid, docno=docno, sim=predicted))
 
-    trec_eval_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'trec_eval-9.0.5/trec_eval')
+    trec_eval_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'trec_eval-9.0.7/trec_eval')
     trec_out = subprocess.check_output([trec_eval_path, '-m', 'map', '-m', 'recip_rank', qrel_fname, results_fname])
     trec_out_lines = str(trec_out, 'utf-8').split('\n')
     mean_average_precision = float(trec_out_lines[0].split('\t')[-1])

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-VERSION=9.0.5
+VERSION=9.0.7
 
 wget https://github.com/usnistgov/trec_eval/archive/v${VERSION}.tar.gz
 tar -xvzf v${VERSION}.tar.gz

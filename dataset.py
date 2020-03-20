@@ -32,7 +32,7 @@ class MPCNNDatasetFactory(object):
     """
     @staticmethod
     def get_dataset(dataset_name, word_vectors_dir, word_vectors_file, batch_size, device):
-        trec_eval_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'utils/trec_eval-9.0.5/trec_eval')
+        trec_eval_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'utils/trec_eval-9.0.7/trec_eval')
         if dataset_name == 'sick':
             dataset_root = os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, 'Castor-data', 'datasets', 'sick/')
             train_loader, dev_loader, test_loader = SICK.iters(dataset_root, word_vectors_file, word_vectors_dir, device, batch_size, unk_init=UnknownWordVecCache.unk)

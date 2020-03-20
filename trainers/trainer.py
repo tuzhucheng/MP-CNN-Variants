@@ -16,7 +16,7 @@ class Trainer(object):
         self.patience = trainer_config['patience']
         self.use_tensorboard = trainer_config['tensorboard']
         if self.use_tensorboard:
-            from tensorboardX import SummaryWriter
+            from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter(log_dir=None, comment='' if trainer_config['run_label'] is None else trainer_config['run_label'])
         self.logger = trainer_config['logger']
 

@@ -19,7 +19,7 @@ class SICKTrainer(Trainer):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw, sent1_nonstatic, sent2_nonstatic)
-            loss = F.kl_div(output, batch.label, size_average=False)
+            loss = F.kl_div(output, batch.label, reduction='sum')
             total_loss += loss.item()
             loss.backward()
             self.optimizer.step()

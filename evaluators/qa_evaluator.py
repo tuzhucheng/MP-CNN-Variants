@@ -19,7 +19,7 @@ class QAEvaluator(Evaluator):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, batch.dataset.word_to_doc_cnt, batch.sentence_1_raw, batch.sentence_2_raw, sent1_nonstatic, sent2_nonstatic)
-            test_cross_entropy_loss += F.cross_entropy(output, batch.label, size_average=False).item()
+            test_cross_entropy_loss += F.cross_entropy(output, batch.label, reduction='sum').item()
 
             true_labels.extend(batch.label.detach().cpu().numpy())
             predictions.extend(output.detach().exp()[:, 1].cpu().numpy())

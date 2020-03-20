@@ -36,7 +36,7 @@ class MSRVIDTrainer(Trainer):
             sent1, sent2, sent1_nonstatic, sent2_nonstatic = self.get_sentence_embeddings(batch)
 
             output = self.model(sent1, sent2, batch.ext_feats, sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
-            loss = F.kl_div(output, batch.label, size_average=False)
+            loss = F.kl_div(output, batch.label, reduction='sum')
             total_loss += loss.item()
             loss.backward()
             self.optimizer.step()
@@ -77,8 +77,8 @@ class MSRVIDTrainer(Trainer):
                     sent2_nonstatic = self.nonstatic_embedding(left_out_b[i]).transpose(1, 2)
 
                 output = self.model(sent1, sent2, left_out_ext_feats[i], sent1_nonstatic=sent1_nonstatic, sent2_nonstatic=sent2_nonstatic)
-                val_kl_div_loss += F.kl_div(output, left_out_label[i], size_average=False).item()
-                predict_classes = left_out_a[i].new_tensor(torch.arange(0, self.train_loader.dataset.NUM_CLASSES))\
+                val_kl_div_loss += F.kl_div(output, left_out_label[i], reduction='sum').item()
+                predict_classes = torch.arange(0, self.train_loader.dataset.NUM_CLASSES, device=left_out_a[i].device)\
                                     .float().expand(len(left_out_a[i]), self.train_loader.dataset.NUM_CLASSES)
 
                 predictions = (predict_classes * output.detach().exp()).sum(dim=1)
